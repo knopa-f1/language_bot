@@ -2,9 +2,16 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+
 from keyboards.set_menu import set_main_menu
 from config_data.config import Config, load_config
 from handlers import other_handlers, user_handlers
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
 # Функция конфигурирования и запуска бота
 async def main():

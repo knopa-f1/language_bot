@@ -31,10 +31,25 @@ def create_inline_kb(width: int,
     # Добавляем в билдер последнюю кнопку, если она передана в функцию
     if last_btn:
         kb_builder.row(InlineKeyboardButton(
-            text=LEXICON_BUTTONS_RU[last_btn] if button in LEXICON_BUTTONS_RU else last_btn,
+            text=LEXICON_BUTTONS_RU[last_btn] if last_btn in LEXICON_BUTTONS_RU else last_btn,
             callback_data=last_btn
         ))
 
     # Возвращаем объект инлайн-клавиатуры
     return kb_builder.as_markup()
 
+def start_keyboard():
+    return create_inline_kb(2, 'button_start', 'button_settings')
+
+def settings_keyboard():
+    return create_inline_kb(3, 'button_change_time', 'button_change_frequency')
+
+def time_keyboard(pref:str = "button_start_time", start: int = 0, end: int = 23):
+    buttons = {f'{pref}_{i}': str(i) for i in range(start, end + 1)}
+    print(buttons)
+    return create_inline_kb(8, last_btn= "button_cancel_settings", **buttons)
+
+def frequency_keyboard(start: int = 1, end: int = 24):
+    buttons = {f'button_frequency_{i}': str(i) for i in range(start, end + 1)}
+    print(buttons)
+    return create_inline_kb(8, last_btn= "button_cancel_settings", **buttons)

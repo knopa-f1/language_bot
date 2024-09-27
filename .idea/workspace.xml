@@ -1,18 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="23c6dc5b-5ac5-4940-8abd-e9aa35898b6c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/languageBot.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="23c6dc5b-5ac5-4940-8abd-e9aa35898b6c" name="Changes" comment="initial commit">
+      <change afterPath="$PROJECT_DIR$/database/user_settings_example.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/database/user_words_example.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_data/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/config_data/constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/other_handlers.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/other_handlers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/user_handlers.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/user_handlers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/keyboards/inline_keyboards.py" beforeDir="false" afterPath="$PROJECT_DIR$/keyboards/inline_keyboards.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/keyboards/set_menu.py" beforeDir="false" afterPath="$PROJECT_DIR$/keyboards/set_menu.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lexicon/lexicon.py" beforeDir="false" afterPath="$PROJECT_DIR$/lexicon/lexicon.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/servises/servises.py" beforeDir="false" afterPath="$PROJECT_DIR$/servises/servises.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -28,10 +45,42 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.languageBot.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master"
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/knopa-f1/Python/languageBot/database"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\knopa-f1\Python\languageBot\database" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="languageBot" type="PythonConfigurationType" factoryName="Python">
+      <module name="languageBot" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.12 (languageBot)" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -48,6 +97,19 @@
       <option name="presentableId" value="Default" />
       <updated>1727352758068</updated>
     </task>
+    <task id="LOCAL-00001" summary="initial commit">
+      <option name="closed" value="true" />
+      <created>1727353301353</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1727353301353</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="initial commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="initial commit" />
   </component>
 </project>
