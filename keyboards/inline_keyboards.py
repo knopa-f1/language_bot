@@ -46,10 +46,8 @@ def settings_keyboard():
 
 def time_keyboard(pref:str = "button_start_time", start: int = 0, end: int = 23):
     buttons = {f'{pref}_{i}': str(i) for i in range(start, end + 1)}
-    print(buttons)
     return create_inline_kb(8, last_btn= "button_cancel_settings", **buttons)
 
 def frequency_keyboard(start: int = 1, end: int = 24):
     buttons = {f'button_frequency_{i}': str(i) for i in range(start, end + 1)}
-    print(buttons)
     return create_inline_kb(8, last_btn= "button_cancel_settings", **buttons)

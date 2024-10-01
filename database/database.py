@@ -1,6 +1,7 @@
-from config_data.constants import default_settings, file_name_settings, file_name_user_words
+from config_data.constants import default_settings, file_name_settings, file_name_user_words, file_name_words
 from utils.utils import load_dict, save_dict
 from dataclasses import dataclass, field
+import random
 
 user_word_template = {
     'viewed': False,
@@ -20,6 +21,7 @@ class BotSettings:
     def initialize_settings(self):
         # Логика инициализации настроек
         self.users_settings = load_dict(file_name_settings)
+        self.words = load_dict(file_name_words)
         self.users_cache = {}
 
     def add_user_users_settings(self, user_id):
@@ -56,6 +58,19 @@ class BotSettings:
     def save_users_settings_to_file(self):
         save_dict(self.users_settings, file_name_settings)
 
+    # Возвращает список пользователей, для рассылки в текущий час
+    def users_list_to_send(self, current_hour: int):
+        users_list = []
+        for user_id, user_settings in self.users_settings.items():
+            # проверка, нужно ли в этот час отправлять пользователю сообщение
+            if current_hour >= user_settings["start_time"] and current_hour <= user_settings["end_time"] and (
+                    current_hour - user_settings["start_time"]) % user_settings["frequency"] == 0:
+                users_list.append(user_id)
+        return users_list
+
+    def get_random_word(self):
+        key, val = random.choice(list(self.words.items()))
+        return f'{key} = {val}'
 
 # Инициализируем настройки
 bot_settings = BotSettings()

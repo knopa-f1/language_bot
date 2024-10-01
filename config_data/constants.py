@@ -6,3 +6,4 @@ default_settings = {
 
 file_name_settings = "database\\user_settings.json"
 file_name_user_words = "database\\user_words.json"
+file_name_words = "database\\words.json"

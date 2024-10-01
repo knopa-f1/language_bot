@@ -3,8 +3,8 @@ import json
 # Load dict from JSON file
 def load_dict(file_name:str):
     try:
-        with open(file_name, "r") as file:
-            return json.load(file)
+        with open(file_name, encoding='utf-8', mode="r") as file:
+            return json.load(file, )
     except FileNotFoundError:
         return {}
 
