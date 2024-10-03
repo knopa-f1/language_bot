@@ -2,5 +2,3 @@
 venv/
 __pycache__/
 .idea
-database/user_settings.json
-database/user_words.json
