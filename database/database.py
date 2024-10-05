@@ -80,7 +80,7 @@ class UsersSettingsInterface(BaseQueriesMixin):
         if user_settings == None:
             return LEXICON_RU["error_no_settings"]
         else:
-            return (f"⚙️ ТВОИ НАСТРОЙКИ:\n"
+            return (f"⚙️ НАСТРОЙКИ НАПОМИНАНИЙ:\n"
                     f"Время начала: {user_settings[0]}:00\n"
                     f"Время окончания: {user_settings[1]}:00\n"
                     f"Периодичность: каждый {user_settings[2]} час\n"
@@ -94,7 +94,7 @@ class UsersSettingsInterface(BaseQueriesMixin):
         self.execute_query_and_commit(query, values)
 
     # Возвращает список пользователей, для рассылки в текущий час
-    def users_list_to_send(self, current_hour: int):
+    def users_list_to_send(self, current_hour: int) -> list:
         # Нужно ли в этот час отправлять пользователю сообщение
         query = """select t.user_id from users_settings as t 
                 where t.start_time <= %s and t.end_time >= %s
@@ -103,15 +103,22 @@ class UsersSettingsInterface(BaseQueriesMixin):
         users_list = self.get_query_results(query, values)
         return users_list
 
+
 class WordsInterface(BaseQueriesMixin):
 
-    def get_random_word(self):
-        query = """SELECT lithuanian, russian 
+    def get_random_words(self, count: int = 4):
+        query = """SELECT word_id, word, translation_ru 
                 FROM words_dictionary
                 ORDER BY RANDOM()
-                LIMIT 1;"""
-        result = self.get_row_by_query(query)
-        return f'{result[0]} = {result[1]}'
+                LIMIT %s;"""
+        result = self.get_query_results(query, (count,))
+        return result
+
+    def get_word_by_id(self, word_id: int) -> tuple:
+        query = """SELECT word, translation_ru 
+                        FROM words_dictionary
+                        WHERE word_id = %s;"""
+        return self.get_row_by_query(query,(word_id,))
 
 class Database(BaseQueriesMixin):
     def __init__(self):
