@@ -1,18 +1,24 @@
-from copy import deepcopy
-
 from config_data.constants import default_settings
 from dotenv import find_dotenv
-from lexicon.lexicon import LEXICON_RU
-from utils.utils import load_dict, save_dict
-from dataclasses import dataclass, field
+from lexicon.lexicon import LEXICON_RU, LEXICON_SETTINGS_RU, LEXICON_STATISTICS_RU
+from dataclasses import dataclass
 import psycopg2
 from psycopg2.extensions import connection
-import random
 from config_data.config import Config, load_config
+from enum import Enum
+
+
+class Status(Enum):
+    "Статус изучения слова"
+    new = "new"
+    in_progress = "in_progress"
+    never_learn = "never_learn"
+    learned = "learned"
 
 @dataclass
 class BaseQueriesMixin:
     conn: connection
+
     def get_row_by_query(self, query: str, values: tuple = None) -> tuple:
         with self.conn.cursor() as cursor:
             cursor.execute(query, values)
@@ -29,7 +35,7 @@ class BaseQueriesMixin:
             return result
         return []
 
-    def execute_query_and_commit(self, query, values=None):
+    def execute_query_and_commit(self, query, values: tuple = None):
         with self.conn.cursor() as cursor:
             cursor.execute(query, values)
             self.conn.commit()
@@ -38,6 +44,7 @@ class BaseQueriesMixin:
         with self.conn.cursor() as cursor:
             cursor.executemany(query, values)
             self.conn.commit()
+
 
 class UsersCacheInterface():
     def __init__(self):
@@ -50,10 +57,11 @@ class UsersCacheInterface():
 
     def create(self, user_id):
         if user_id not in self.users_cache:
-            self.users_cache.setdefault(user_id, deepcopy(default_settings))
+            self.users_cache.setdefault(user_id, {})
 
-    def get(self,user_id, name):
+    def get(self, user_id, name):
         return self.users_cache[user_id].get(name, None)
+
 
 class UsersSettingsInterface(BaseQueriesMixin):
 
@@ -69,7 +77,7 @@ class UsersSettingsInterface(BaseQueriesMixin):
                     INSERT INTO users_settings (user_id, frequency, start_time, end_time)
                     VALUES (%s, %s, %s, %s);
                     '''
-            values = (user_id, *default_settings.values())
+            values = (user_id, default_settings.frequency, default_settings.start_time, default_settings.end_time)
             self.execute_query_and_commit(query, values)
 
     def get(self, user_id: int):
@@ -80,18 +88,18 @@ class UsersSettingsInterface(BaseQueriesMixin):
         if user_settings == None:
             return LEXICON_RU["error_no_settings"]
         else:
-            return (f"⚙️ НАСТРОЙКИ НАПОМИНАНИЙ:\n"
-                    f"Время начала: {user_settings[0]}:00\n"
-                    f"Время окончания: {user_settings[1]}:00\n"
-                    f"Периодичность: каждый {user_settings[2]} час\n"
-                    f"Чтобы изменить настройки, нажми кнопки ниже")
+            settings_lst = [set.replace("%s", str(user_settings[num])) for num, set in
+                            enumerate(LEXICON_SETTINGS_RU.values())]
+            settings_lst.insert(0, LEXICON_RU["user_settings"])
+            return f'{"\n".join(settings_lst)}'
+
 
     def save(self, user_id: int, **kwargs):
         fields = ",".join([f'{field} = %s' for field in kwargs.keys()])
         query = f"UPDATE users_settings SET {fields} WHERE user_id = %s;"
         values = list(kwargs.values())
         values.append(user_id)
-        self.execute_query_and_commit(query, values)
+        self.execute_query_and_commit(query, tuple(values))
 
     # Возвращает список пользователей, для рассылки в текущий час
     def users_list_to_send(self, current_hour: int) -> list:
@@ -104,25 +112,140 @@ class UsersSettingsInterface(BaseQueriesMixin):
         return users_list
 
 
-class WordsInterface(BaseQueriesMixin):
+class WordsStatisticInterface(BaseQueriesMixin):
+    def _current_words_exists(self, user_id: int) -> bool:
+        query = "SELECT EXISTS(SELECT 1 FROM users_current_words WHERE user_id = %s);"
+        values = (user_id,)
+        result = self.get_row_by_query(query, values)
+        return result[0]
 
-    def get_random_words(self, count: int = 4):
-        query = """SELECT word_id, word, translation_ru 
-                FROM words_dictionary
+    def add_current_user_words(self, user_id: int, count: int = default_settings.count_current):
+        query = """INSERT INTO users_current_words(user_id, word_id)
+    	            (SELECT %s, d.word_id
+                         FROM words_dictionary as d
+                          LEFT JOIN users_statistics as s
+                                on s.user_id = %s and s.word_id = d.word_id 
+                          WHERE COALESCE(s.status, %s) = %s 
+                                or (COALESCE(s.status, %s) = %s and s.status_date + INTERVAL '%s day' <= now())
+                    ORDER BY RANDOM()
+                    LIMIT %s);
+                    """
+        values = (user_id, user_id, Status.new.value, Status.new.value, Status.new.value,
+                  Status.learned.value, default_settings.repeat_after_days, count)
+        self.execute_query_and_commit(query, values)
+
+    def should_del_current_word(self, user_id: int, word_id: int):
+        query = """SELECT user_id, word_id FROM users_statistics 
+	                WHERE user_id = %s and word_id = %s 
+	                and correct >= %s and 
+	                CASE WHEN correct+wrong = 0 THEN 0 ELSE correct/(correct+wrong) END >=%s
+	            """
+
+        values = (user_id, word_id,
+                  default_settings.count_correct,
+                  default_settings.percent_correct)
+
+        result = self.get_row_by_query(query, values)
+        return result[0] is not None
+
+    def change_word_status(self, user_id: int, word_id: int, status):
+        query = """INSERT INTO users_statistics(user_id, word_id, correct, wrong, status, status_date)
+                    VALUES (%s, %s, 0, 0, %s, now())
+                    ON CONFLICT (user_id, word_id)
+                    DO UPDATE SET
+                        status = %s,
+                        status_date = now()"""
+        values = (user_id, word_id, status, status)
+        self.execute_query_and_commit(query, values)
+
+    def update_current_words(self, user_id: int, word_id: int, del_word: bool = False):
+        "Удаляет запись из текущих слов, если передан параметр или выучили слово"
+        if del_word:
+            status = Status.never_learn
+        elif self.should_del_current_word(user_id, word_id):
+            status = Status.learned
+        else:
+            return
+
+        query = """DELETE FROM users_current_words
+                   WHERE user_id = %s and word_id = %s
+                """
+        values = (user_id, word_id)
+        self.execute_query_and_commit(query, values)
+
+        self.add_current_user_words(user_id, 1)
+        self.change_word_status(user_id, word_id, status.value)
+
+    def get_words_to_learn(self, user_id: int, count: int = 4):
+        "возвращает слова для отображения - 1 из текущих слов пользователя, остальные - из общего списка"
+
+        if not self._current_words_exists(user_id):
+            # выбираем слова из словаря, которые еще не учили, пишем в текущие
+            self.add_current_user_words(user_id)
+        query = """SELECT d.word_id, d.word, d.translation_ru 
+                FROM words_dictionary as d
+                inner join users_current_words as cw
+                on cw.user_id = %s and cw.word_id = d.word_id 
                 ORDER BY RANDOM()
-                LIMIT %s;"""
-        result = self.get_query_results(query, (count,))
-        return result
+                LIMIT 1;"""
+        correct_word = self.get_row_by_query(query, (user_id, ))
+
+        query = """SELECT d.word_id, d.word, d.translation_ru 
+                        FROM words_dictionary as d
+                        WHERE d.word_id != %s
+                        ORDER BY RANDOM()
+                        LIMIT %s;"""
+        variants = self.get_query_results(query, (correct_word[0], count-1))
+
+        return {"correct_word": correct_word,
+                "variants": variants}
 
     def get_word_by_id(self, word_id: int) -> tuple:
         query = """SELECT word, translation_ru 
                         FROM words_dictionary
                         WHERE word_id = %s;"""
-        return self.get_row_by_query(query,(word_id,))
+        return self.get_row_by_query(query, (word_id,))
+
+    def get_statistics(self, user_id: int):
+        query = """SELECT SUM(correct + wrong) as all,
+                    SUM(correct) as correct, 
+                    CASE WHEN SUM(correct+ wrong) = 0 
+                        THEN 0
+                        ELSE (SUM(correct)*100/SUM(correct+ wrong))
+                    END as correct_percent,
+                    SUM(CASE WHEN COALESCE(status,  %s) =  %s THEN 1 ELSE 0 END) as learned 
+                    FROM users_statistics 
+                    WHERE user_id = %s;"""
+        values = (Status.new.value, Status.learned.value, user_id)
+        user_stat = self.get_row_by_query(query, values)
+
+        if user_stat == None:
+            return LEXICON_RU["error_no_stat"]
+        else:
+            settings_lst = [set.replace("%s", str(user_stat[num])) for num, set in
+                            enumerate(LEXICON_STATISTICS_RU.values())]
+            settings_lst.insert(0, LEXICON_RU["user_stat"])
+            return f'{"\n".join(settings_lst)}'
+
+    def mark_word_as_never_learn(self, user_id: int, word_id: int):
+        self.update_current_words(user_id, word_id, True)
+
+    def save_statistic_by_word(self, user_id: int, word_id: int, correct: int = 0, wrong: int = 0):
+        query = """INSERT INTO users_statistics(user_id, word_id, correct, wrong, status, status_date)
+                    VALUES (%s, %s, %s, %s, %s, now())
+                    ON CONFLICT (user_id, word_id)
+                    DO UPDATE SET
+                        correct = users_statistics.correct + %s,
+                        wrong = users_statistics.wrong + %s,
+                        status = %s
+                """
+        values = (user_id, word_id, correct, wrong, Status.in_progress.value, correct, wrong, Status.in_progress.value)
+        self.execute_query_and_commit(query, values)
+        self.update_current_words(user_id, word_id)
+
 
 class Database(BaseQueriesMixin):
     def __init__(self):
-
         config: Config = load_config(find_dotenv('.env'))
         self.conn = psycopg2.connect(
             dbname=config.db.database,
@@ -134,20 +257,8 @@ class Database(BaseQueriesMixin):
 
         self.users_cache = UsersCacheInterface()
         self.users_settings = UsersSettingsInterface(self.conn)
-        self.words_interface = WordsInterface(self.conn)
+        self.words_interface = WordsStatisticInterface(self.conn)
 
-    def get_row_by_query(self, query: str, values: tuple = None) -> tuple:
-        with self.conn.cursor() as cursor:
-            cursor.execute(query, values)
-            result = cursor.fetchone()
-        if result:
-            return result
-        return (None,)
-
-    def execute_query_and_commit(self, query, values=None):
-        with self.conn.cursor() as cursor:
-            cursor.execute(query, values)
-            self.conn.commit()
     def get_table_data_as_dict(self, table_name: str) -> dict:
         with self.conn.cursor() as cursor:
             query = f"SELECT * FROM {table_name};"

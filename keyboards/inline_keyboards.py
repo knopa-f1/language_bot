@@ -41,6 +41,9 @@ def create_inline_kb(width: int,
 def start_keyboard():
     return create_inline_kb(2, 'buttonStart', 'buttonSettings')
 
+def learn_keyboard():
+    return create_inline_kb(2, 'buttonStart')
+
 def settings_keyboard():
     return create_inline_kb(3, 'buttonChangeTime', 'buttonChangeFrequency', last_btn="buttonCancelSettings")
 
@@ -52,7 +55,15 @@ def frequency_keyboard(start: int = 1, end: int = 24):
     buttons = {f'buttonFrequency_{i}': str(i) for i in range(start, end + 1)}
     return create_inline_kb(8, last_btn="buttonCancelSettings", **buttons)
 
-def guess_word_keyboard(words_list: list[tuple], type:int, answer_id:int):
+def guess_word_keyboard(words_list: list[tuple], type_id:int, correct_id:int):
     # key = 'buttonWord_{word_id}_{answer_id}_{type}_{correct}'
-    buttons = {f'buttonWord_{w_info[0]}_{answer_id}_{type}_{int(answer_id == w_info[0])}': w_info[2 if type == 1 else 1] for w_info in words_list}
+    buttons = {f'buttonWord_{w_info[0]}_{correct_id}_{type_id}_{int(correct_id == w_info[0])}': w_info[2 if type_id == 1 else 1] for w_info in words_list}
+    return create_inline_kb(2,  **buttons)
+
+def answer_word_keyboard(word_info):
+    buttons = {f'buttonAlreadyLearned_{word_info.correct_id}_{word_info.type_id}':
+                   LEXICON_BUTTONS_RU[f"buttonAlreadyLearned_{int(word_info.correct)}"],
+               "buttonStart":  LEXICON_BUTTONS_RU["buttonContinue"],}
     return create_inline_kb(2, last_btn="buttonCancelLearning", **buttons)
+
+

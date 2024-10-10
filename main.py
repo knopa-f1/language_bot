@@ -35,8 +35,8 @@ async def main():
     dp.include_router(other_handlers.router)
 
     # Запуск рассылки каждый час
-    # scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot,))
-    scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot,))
+    scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot,))
+    #scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot,))
     scheduler.start()
 
     # Пропускаем накопившиеся апдейты и запускаем polling

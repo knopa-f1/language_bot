@@ -1,3 +1,5 @@
+from dataclasses import dataclass, field
+
 from lexicon.lexicon import LEXICON_RU
 from database.database import bot_database
 import random
@@ -7,31 +9,59 @@ from keyboards.inline_keyboards import guess_word_keyboard
 def get_selected_number(data: str, pref: str = "buttonStartTime_"):
     return int(data.replace(pref, ""))
 
-def check_if_answer_correct(data: str):
-    return True if data.endswith("1") else False
+def get_selected_end_time(data: str)->tuple:
+    data_lst = data.split("_")
+    return (data_lst[-2], data_lst[-1])
 
-def answer_message(data: str):
-    data_lst  = data.split("_") # 'buttonWord_{word_id}_{answer_id}_{type}_{correct}'
-    is_correct = True if data_lst[4] == "1" else False
-    if is_correct:
-        return LEXICON_RU['correct_answer']
-    else:
-        correct_id = int(data_lst[2])
-        type = data_lst[3] # тип угадывания - 1 - угадываем перевод по слову, 2 - по переводу слово
-        correct_word = bot_database.words_interface.get_word_by_id(correct_id)
-        return (f'{LEXICON_RU['wrong_answer']}'
-                f'{correct_word[1] if type == "1" else correct_word[0]}')
 
-def prepare_words_to_learn(answer_text: str = 0) -> dict:
-    words_list = bot_database.words_interface.get_random_words()
-    type = random.randint(1,2) # тип угадывания - 1 - угадываем перевод по слову, 2 - по переводу слово
+@dataclass
+class WordInfo:
+    user_id: int
+    word_id: int
+    type_id: int
+    correct_id: int
+    correct: bool = False
+    def __init__(self, user_id:int, data: str):
+        super().__init__()
+        data_lst = data.split("_")  # 'buttonWord_{word_id}_{correct_id}_{type}_{correct}' или
+                                    # buttonAlreadyLearned_{word_id}_{type_id}
+        if data_lst[0] == "buttonWord":
+            self.word_id = int(data_lst[1])
+            self.correct_id = int(data_lst[2])
+            self.type_id = data_lst[3], # тип угадывания - 1 - угадываем перевод по слову, 2 - по переводу слово
+            self.correct = data_lst[4] == "1"
+            self.user_id = user_id
+        elif data_lst[0] == "buttonAlreadyLearned":
+            self.word_id = int(data_lst[1])
+            self.correct_id = int(data_lst[1])
+            self.type_id = data_lst[2],  # тип угадывания - 1 - угадываем перевод по слову, 2 - по переводу слово
+            self.correct = True
+            self.user_id = user_id
+    def answer_message(self):
+        correct_word = bot_database.words_interface.get_word_by_id(self.correct_id)
+        bot_database.words_interface.save_statistic_by_word(self.user_id, self.word_id,
+                                               (1 if self.correct else 0),
+                                               (0 if self.correct else 1))
+
+        return (f'{LEXICON_RU['correct_answer'] if self.correct else LEXICON_RU['wrong_answer']}\n\n'
+                f'{correct_word[1] if self.type_id == "1" else correct_word[0]} - {correct_word[0] if self.type_id == "1" else correct_word[1]}')
+
+    def mark_word_as_never_learn(self) -> None:
+        bot_database.words_interface.mark_word_as_never_learn(self.user_id, self.word_id)
+
+def prepare_words_to_learn(user_id:int, answer_text: str = 0) -> dict:
+    words = bot_database.words_interface.get_words_to_learn(user_id)
+    words_list = words["variants"]
+    words_list.append(words["correct_word"])
+
+    type_id = random.randint(1,2) # тип угадывания - 1 - угадываем перевод по слову, 2 - по переводу слово
     message_text = (f'{answer_text}\n\n'
-                    f'{LEXICON_RU[f'message_text_{type}']}\n'
-                    f'{words_list[0][type]}')
-    answer_id = words_list[0][0]
+                    f'{words["correct_word"][type_id]}\n\n'
+                    f'{LEXICON_RU[f'message_text_{type_id}']}')
+    answer_id = words["correct_word"][0]
     random.shuffle(words_list)
 
-    keyboard = guess_word_keyboard(words_list, type, answer_id)
+    keyboard = guess_word_keyboard(words_list, type_id, answer_id)
 
     return {"message_text": message_text,
             "keyboard": keyboard}
