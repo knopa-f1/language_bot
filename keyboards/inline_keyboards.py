@@ -57,7 +57,8 @@ def frequency_keyboard(start: int = 1, end: int = 24):
 
 def guess_word_keyboard(words_list: list[tuple], type_id:int, correct_id:int):
     # key = 'buttonWord_{word_id}_{answer_id}_{type}_{correct}'
-    buttons = {f'buttonWord_{w_info[0]}_{correct_id}_{type_id}_{int(correct_id == w_info[0])}': w_info[2 if type_id == 1 else 1] for w_info in words_list}
+    buttons = {f'buttonWord_{w_info[0]}_{correct_id}_{type_id}_{int(correct_id == w_info[0])}':
+                   w_info[2 if type_id == 1 else 1] for w_info in words_list}
     return create_inline_kb(2,  **buttons)
 
 def answer_word_keyboard(word_info):

@@ -4,9 +4,10 @@ from lexicon.lexicon import LEXICON_RU, LEXICON_SETTINGS_RU, LEXICON_STATISTICS_
 from dataclasses import dataclass
 import psycopg2
 from psycopg2.extensions import connection
+import psycopg2.extras
 from config_data.config import Config, load_config
 from enum import Enum
-
+from jinja2 import Template
 
 class Status(Enum):
     "Статус изучения слова"
@@ -27,12 +28,32 @@ class BaseQueriesMixin:
             return result
         return (None,)
 
-    def get_query_results(self, query: str, values: tuple = None) -> list[tuple]:
+    def get_row_by_query_as_dict(self, query: str, values: tuple = None) -> (dict, None):
+        with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute(query, values)
+            result = cursor.fetchone()
+            result_dict = dict(result)
+        if result_dict:
+            return result_dict
+        return None
+
+    def get_query_results(self, query: str, values: tuple = None) -> (list[tuple], None):
         with self.conn.cursor() as cursor:
             cursor.execute(query, values)
             result = cursor.fetchall()
         if result:
             return result
+        return None
+
+    def get_query_results_as_dict(self, query: str, values: tuple = None) -> list[dict]:
+        with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute(query, values)
+            result = cursor.fetchall()
+            result_dict = []
+            for row in result:
+                result_dict.append(dict(row))
+        if result_dict:
+            return result_dict
         return []
 
     def execute_query_and_commit(self, query, values: tuple = None):
@@ -83,15 +104,12 @@ class UsersSettingsInterface(BaseQueriesMixin):
     def get(self, user_id: int):
         query = "SELECT  start_time, end_time, frequency FROM users_settings WHERE user_id = %s;"
         values = (user_id,)
-        user_settings = self.get_row_by_query(query, values)
-
+        user_settings = self.get_row_by_query_as_dict(query, values)
         if user_settings == None:
             return LEXICON_RU["error_no_settings"]
         else:
-            settings_lst = [set.replace("%s", str(user_settings[num])) for num, set in
-                            enumerate(LEXICON_SETTINGS_RU.values())]
-            settings_lst.insert(0, LEXICON_RU["user_settings"])
-            return f'{"\n".join(settings_lst)}'
+            settings = LEXICON_RU["user_settings"] + "\n".join(LEXICON_SETTINGS_RU.values())
+            return Template(settings).render(user_settings = user_settings)
 
 
     def save(self, user_id: int, **kwargs):
@@ -189,7 +207,6 @@ class WordsStatisticInterface(BaseQueriesMixin):
                 ORDER BY RANDOM()
                 LIMIT 1;"""
         correct_word = self.get_row_by_query(query, (user_id, ))
-
         query = """SELECT d.word_id, d.word, d.translation_ru 
                         FROM words_dictionary as d
                         WHERE d.word_id != %s
@@ -201,10 +218,10 @@ class WordsStatisticInterface(BaseQueriesMixin):
                 "variants": variants}
 
     def get_word_by_id(self, word_id: int) -> tuple:
-        query = """SELECT word, translation_ru 
+        query = """SELECT word, translation_ru as translation
                         FROM words_dictionary
                         WHERE word_id = %s;"""
-        return self.get_row_by_query(query, (word_id,))
+        return self.get_row_by_query_as_dict(query, (word_id,))
 
     def get_statistics(self, user_id: int):
         query = """SELECT SUM(correct + wrong) as all,
@@ -217,15 +234,14 @@ class WordsStatisticInterface(BaseQueriesMixin):
                     FROM users_statistics 
                     WHERE user_id = %s;"""
         values = (Status.new.value, Status.learned.value, user_id)
-        user_stat = self.get_row_by_query(query, values)
+        user_stat = self.get_row_by_query_as_dict(query, values)
 
         if user_stat == None:
             return LEXICON_RU["error_no_stat"]
         else:
-            settings_lst = [set.replace("%s", str(user_stat[num])) for num, set in
-                            enumerate(LEXICON_STATISTICS_RU.values())]
-            settings_lst.insert(0, LEXICON_RU["user_stat"])
-            return f'{"\n".join(settings_lst)}'
+            stat = LEXICON_RU["user_stat"] + "\n".join(LEXICON_STATISTICS_RU.values())
+            print(type(stat))
+            return Template(stat).render(user_stat=user_stat)
 
     def mark_word_as_never_learn(self, user_id: int, word_id: int):
         self.update_current_words(user_id, word_id, True)

@@ -44,7 +44,8 @@ class WordInfo:
                                                (0 if self.correct else 1))
 
         return (f'{LEXICON_RU['correct_answer'] if self.correct else LEXICON_RU['wrong_answer']}\n\n'
-                f'{correct_word[1] if self.type_id == "1" else correct_word[0]} - {correct_word[0] if self.type_id == "1" else correct_word[1]}')
+                f'{correct_word["translation"] if self.type_id == "1" else correct_word["word"]} '
+                f'- {correct_word["word"] if self.type_id == "1" else correct_word["translation"]}')
 
     def mark_word_as_never_learn(self) -> None:
         bot_database.words_interface.mark_word_as_never_learn(self.user_id, self.word_id)
