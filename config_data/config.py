@@ -13,6 +13,12 @@ class DatabaseConfig:
     db_password: str
     dp_port: str
 
+@dataclass
+class StorageConfig:
+    redis_host: str
+    redis_port: str
+    redis_password: str
+
 
 @dataclass
 class TgBot:
@@ -23,6 +29,7 @@ class TgBot:
 class Config:
     tg_bot: TgBot
     db: DatabaseConfig
+    redis: StorageConfig
 
 def load_config(path: str | None = None) -> Config:
     env = Env()
@@ -34,5 +41,10 @@ def load_config(path: str | None = None) -> Config:
                       db_user=env('DB_USER'),
                       db_password=env('DB_PASSWORD'),
                       dp_port=env('DB_PORT')
+                  ),
+                  redis=StorageConfig(
+                      redis_host=env('REDIS_HOST'),
+                      redis_port=env('REDIS_PORT'),
+                      redis_password=env('REDIS_PASSWORD')
                   )
                   )

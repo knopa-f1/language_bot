@@ -1,0 +1,11 @@
+button-start = Поехали!
+button-next = Далее
+button-settings = Настройки
+button-statistics = Статистика
+button-change-time = Время работы напоминаний
+button-change-frequency = Периодичность
+button-change-language = Язык
+button-cancel-settings = Отмена
+button-cancel-learning = Завершить
+button-already-learned-0 = Не хочу учить это слово
+button-already-learned-1 = Уже выучил это слово

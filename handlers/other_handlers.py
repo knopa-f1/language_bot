@@ -1,7 +1,6 @@
 from aiogram import Router
 from aiogram.types import Message
-from lexicon.lexicon import LEXICON_RU
-import requests
+from fluentogram import TranslatorRunner
 
 # Инициализируем роутер уровня модуля
 router = Router()
@@ -9,8 +8,8 @@ router = Router()
 # Этот хэндлер будет срабатывать на любые ваши сообщения,
 # кроме команд "/start" и "/help"
 @router.message()
-async def send_message(message: Message):
-    await message.reply(text=LEXICON_RU['no_answer'])
+async def send_message(message: Message, i18n: TranslatorRunner):
+    await message.reply(text=i18n.no.answer())
 
 
 

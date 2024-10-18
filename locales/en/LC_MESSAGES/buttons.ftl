@@ -1,0 +1,11 @@
+button-start = Let's go!
+button-next = Next
+button-settings = Settings
+button-statistics = Stat
+button-change-time = Reminder active time
+button-change-frequency = Frequency
+button-change-language = Language
+button-cancel-settings = Cancel
+button-cancel-learning = Finish
+button-already-learned-0 = Don't want to learn this word
+button-already-learned-1 = Already know this word
