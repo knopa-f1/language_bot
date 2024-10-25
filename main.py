@@ -1,69 +1,78 @@
 import asyncio
 import logging
+import sys
 
 from aiogram import Bot, Dispatcher
+from cache.users_cache import UserCache
 from config_data.constants import DefaultSettings
-from database.database import Database
+
+from config_data.logging_config import setup_logging
 
 from keyboards.set_menu import set_main_menu
 from config_data.config import Config, load_config
 from handlers import other_handlers, user_handlers
+from middlewares.session import DbSessionMiddleware
 from servises.schedule_tasks import job_send_messages_to_users
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from fluentogram import TranslatorHub
 from middlewares.i18n import TranslatorRunnerMiddleware
-from servises.users_cache import UsersCache
+
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from utils.i18n import create_translator_hub
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
 
-# Инициализируем логгер модуля
-logger = logging.getLogger(__name__)
-
-# Функция конфигурирования и запуска бота
+# start bot
 async def main():
-    # Загружаем конфиг в переменную config
+    # load config
     config: Config = load_config()
 
-    # Инициализируем бот и диспетчер
+    # logging
+    setup_logging(config.env_type)
+    logger = logging.getLogger(__name__)
+
+    # db
+    engine = create_async_engine(
+        url=str(config.db.dsn),
+        echo=True if config.env_type == "test" else False
+    )
+
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    translator_hub: TranslatorHub = create_translator_hub()
+    scheduler: AsyncIOScheduler = AsyncIOScheduler()
+
+    # bot and dispatcher
     bot = Bot(token=config.tg_bot.token)
     dp = Dispatcher()
 
-    # Загружаем настройки по умолчанию
-    dp["default_settings"] = DefaultSettings()
-    # Загружаем бд
-    bot_database = Database()
-    dp["bot_database"] = bot_database
-    # Загружаем кэш
-    dp["users_cache"] = UsersCache()
+    # workflow_data
+    default_settings = DefaultSettings()
+    dp["default_settings"] = default_settings
+    dp["users_cache"] = UserCache()
 
-    # Создаем объект типа TranslatorHub
-    translator_hub: TranslatorHub = create_translator_hub()
+    # set Menu
+    await set_main_menu(bot, translator_hub.get_translator_by_locale(default_settings.user_set.lang))
 
-    scheduler: AsyncIOScheduler = AsyncIOScheduler()
-
-    # Настраиваем кнопку Menu
-    await set_main_menu(bot)
-
-    # Регистриуем роутеры в диспетчере
+    # registration routers
     dp.include_router(user_handlers.router)
     dp.include_router(other_handlers.router)
 
-    # Запуск рассылки каждый час
-    scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot, translator_hub, bot_database))
-    #scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot,))
-    scheduler.start()
-
-    # Регистрируем миддлвар для i18n
+    # registration middleware
+    dp.update.outer_middleware(DbSessionMiddleware(session_maker))
     dp.update.middleware(TranslatorRunnerMiddleware())
 
-    # Пропускаем накопившиеся апдейты и запускаем polling
+    # schedule reminders
+    scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot, translator_hub, session_maker))
+    # scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot,))
+    scheduler.start()
+
+    # start polling
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, allowed_updates=['message', 'callback_query'], _translator_hub=translator_hub)
 
-asyncio.run(main())
+
+if __name__ == '__main__':
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    asyncio.run(main())

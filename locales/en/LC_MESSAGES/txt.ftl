@@ -1,5 +1,5 @@
 start = Hey!
-        I’m a bot here to help you learn Lithuanian words. I’ll send you new ones to learn. Ready to get started?
+        I’m a bot that will help you learn Lithuanian words. I’ll send you new words to learn. Are you ready to start?
 
 help = This bot will help you learn Lithuanian words easily and in a fun way.
 
@@ -33,9 +33,9 @@ message-text-1 = translates as:
 
 message-text-2 = means:
 
-correct-answer = 🤩 Well done! That's the correct answer!
+correct-answer = ✅ That’s the right answer!
 
-wrong-answer = 😔 Wrong!
+wrong-answer = ❌ Wrong!
 
 cancel-learning = 😎 Great job!
 

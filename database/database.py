@@ -1,7 +1,6 @@
-from typing import Dict, Any
+from typing import Any
 
 from config_data.constants import DefaultSettings
-from database.cache import cache
 from dotenv import find_dotenv
 from fluentogram import TranslatorRunner
 from dataclasses import dataclass
@@ -10,7 +9,6 @@ from psycopg2.extensions import connection
 import psycopg2.extras
 from config_data.config import Config, load_config
 from enum import Enum
-from jinja2 import Template
 
 
 class Status(Enum):
@@ -37,9 +35,8 @@ class BaseQueriesMixin:
         with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
             cursor.execute(query, values)
             result = cursor.fetchone()
-            result_dict = dict(result)
-        if result_dict:
-            return result_dict
+        if result:
+            return dict(result)
         return None
 
     def get_query_results(self, query: str, values: tuple = None) -> (list[tuple], None):
@@ -50,7 +47,7 @@ class BaseQueriesMixin:
             return result
         return None
 
-    def get_query_results_as_dict(self, query: str, values: tuple = None) -> list[dict]:
+    def get_query_results_as_list(self, query: str, values: tuple = None) -> list[dict]:
         with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
             cursor.execute(query, values)
             result = cursor.fetchall()
@@ -61,65 +58,27 @@ class BaseQueriesMixin:
             return result_dict
         return []
 
-    def execute_query_and_commit(self, query, values: tuple = None):
+    def execute_query_and_commit(self, query: str, values: tuple = None) -> None:
         with self.conn.cursor() as cursor:
             cursor.execute(query, values)
             self.conn.commit()
 
-    def execute_queries_and_commit(self, query, values=None):
+    def execute_queries_and_commit(self, query: str, values=None) -> None:
         with self.conn.cursor() as cursor:
             cursor.executemany(query, values)
             self.conn.commit()
 
 
-# class UsersCacheInterface():
-#     def __init__(self):
-#         self.users_cache = {}
-#
-#     def add(self, user_id, name, value):
-#         if user_id not in self.users_cache:
-#             self.users_cache[user_id] = {}
-#         self.users_cache[user_id][name] = value
-#
-#     def create(self, user_id):
-#         if user_id not in self.users_cache:
-#             self.users_cache.setdefault(user_id, {})
-#
-#     def get(self, user_id, name):
-#         return self.users_cache[user_id].get(name, None)
-#
-#
-# class StorageInterface():
-#     def __init__(self, redis_conn):
-#         self.redis_conn: redis.Redis = redis_conn
-#
-#     @staticmethod
-#     def cache_id(user_id, name):
-#         return f'user:{user_id}:{name}'
-#
-#     async def set(self, key, value):
-#         await self.redis_conn.set(key, value)
-#
-#     async def get(self, key):
-#         return await self.redis_conn.get(key)
-#
-#     async def set_user_cache(self, user_id, name, value):
-#         await self.redis_conn.setex(self.cache_id(user_id, name), value, default_settings.cache_time)
-#
-#     async def get_user_cache(self, user_id, name):
-#         return await self.get(self, self.cache_id(user_id, name))
-
-
 class UsersSettingsInterface(BaseQueriesMixin):
 
-    def _exists(self, user_id: int) -> bool:
+    def exists(self, user_id: int) -> bool:
         query = "SELECT EXISTS(SELECT 1 FROM users_settings WHERE user_id = %s);"
         values = (user_id,)
         result = self.get_row_by_query(query, values)
         return result[0]
 
     def create(self, user_id: int, default_settings: DefaultSettings, lang: str = None) -> None:
-        if not self._exists(user_id):
+        if not self.exists(user_id):
             query = '''
                     INSERT INTO users_settings (user_id, frequency, start_time, end_time, lang)
                     VALUES (%s, %s, %s, %s, %s);
@@ -129,7 +88,7 @@ class UsersSettingsInterface(BaseQueriesMixin):
                       lang)
             self.execute_query_and_commit(query, values)
 
-    def get_description(self, user_id: int, i18n: TranslatorRunner):
+    def get_description(self, user_id: int, i18n: TranslatorRunner) -> str:
         query = "SELECT  start_time, end_time, frequency, lang FROM users_settings WHERE user_id = %s;"
         values = (user_id,)
         user_settings = self.get_row_by_query_as_dict(query, values)
@@ -138,11 +97,11 @@ class UsersSettingsInterface(BaseQueriesMixin):
         else:
             return i18n.settings.desctiption(**user_settings)
 
-    def get(self, user_id: int, name: str):
+    def get(self, user_id: int, name: str) -> dict | None:
         query = f"SELECT {name} from users_settings WHERE user_id = %s;"
         values = (user_id,)
         user_settings = self.get_row_by_query_as_dict(query, values)
-        return user_settings[name]
+        return None if user_settings is None else user_settings[name]
 
     def set(self, user_id: int, default_settings: DefaultSettings, **kwargs):
         self.create(user_id, default_settings)
@@ -156,10 +115,10 @@ class UsersSettingsInterface(BaseQueriesMixin):
     def users_list_to_send(self, current_hour: int) -> list:
         # Нужно ли в этот час отправлять пользователю сообщение
         query = """select t.user_id as user_id, t.lang as lang  from users_settings as t
-                where t.start_time <= %s and t.end_time >= %s
+                where t.start_time <= %s and t.end_time >=  %s
                 and MOD((%s - t.start_time), t.frequency) = 0"""
         values = (current_hour, current_hour, current_hour)
-        users_list = self.get_query_results_as_dict(query, values)
+        users_list = self.get_query_results_as_list(query, values)
         return users_list
 
 
@@ -188,7 +147,7 @@ class WordsStatisticInterface(BaseQueriesMixin):
                   Status.learned.value, default_settings.repeat_after_days, count)
         self.execute_query_and_commit(query, values)
 
-    def should_del_current_word(self, user_id: int, word_id: int, default_settings:DefaultSettings):
+    def should_del_current_word(self, user_id: int, word_id: int, default_settings: DefaultSettings):
         query = """SELECT user_id, word_id FROM users_statistics 
 	                WHERE user_id = %s and word_id = %s 
 	                and correct >= %s and 
@@ -215,7 +174,7 @@ class WordsStatisticInterface(BaseQueriesMixin):
     def update_current_words(self,
                              user_id: int,
                              word_id: int,
-                             default_settings:DefaultSettings,
+                             default_settings: DefaultSettings,
                              del_word: bool = False):
         "Удаляет запись из текущих слов, если передан параметр или выучили слово"
         if del_word:
@@ -231,10 +190,11 @@ class WordsStatisticInterface(BaseQueriesMixin):
         values = (user_id, word_id)
         self.execute_query_and_commit(query, values)
 
-        self.add_current_user_words(user_id, default_settings, count = 1)
+        self.add_current_user_words(user_id, default_settings, count=1)
         self.change_word_status(user_id, word_id, status.value)
 
-    def get_words_to_learn(self, user_id: int, lang:str, default_settings: DefaultSettings, count: int = 4) -> dict[str, tuple | Any]:
+    def get_words_to_learn(self, user_id: int, lang: str, default_settings: DefaultSettings, count: int = 4) -> dict[
+        str, tuple | Any]:
         "возвращает слова для отображения - 1 из текущих слов пользователя, остальные - из общего списка"
 
         if not self._current_words_exists(user_id):
@@ -256,8 +216,8 @@ class WordsStatisticInterface(BaseQueriesMixin):
 
         return dict(correct_word=correct_word, variants=variants)
 
-    def get_word_by_id(self, word_id: int, lang:str) -> tuple:
-        query = f"""SELECT word, translation_{lang} as translation
+    def get_word_by_id(self, word_id: int, lang: str) -> tuple:
+        query = f"""SELECT word, translation_{lang} as translation, example
                         FROM words_dictionary
                         WHERE word_id = %s;"""
         return self.get_row_by_query_as_dict(query, (word_id,))
@@ -282,7 +242,8 @@ class WordsStatisticInterface(BaseQueriesMixin):
     def mark_word_as_never_learn(self, user_id: int, word_id: int, default_settings: DefaultSettings):
         self.update_current_words(user_id, word_id, default_settings, True)
 
-    def save_statistic_by_word(self, user_id: int, word_id: int, default_settings:DefaultSettings, correct: int = 0, wrong: int = 0):
+    def save_statistic_by_word(self, user_id: int, word_id: int, default_settings: DefaultSettings, correct: int = 0,
+                               wrong: int = 0):
         query = """INSERT INTO users_statistics(user_id, word_id, correct, wrong, status, status_date)
                     VALUES (%s, %s, %s, %s, %s, now())
                     ON CONFLICT (user_id, word_id)
@@ -306,21 +267,6 @@ class Database(BaseQueriesMixin):
             host=config.db.db_host,
             port=config.db.dp_port
         )
-        # self.redis_conn = redis.StrictRedis(
-        #     host=config.redis.redis_host,
-        #     port=config.redis.redis_port,
-        #     password=config.redis.redis_password,
-        #     charset="utf-8",
-        #     decode_responses=True
-        # )
-        #
-        # self.cache = StorageInterface(self.redis_conn)
+
         self.users_settings = UsersSettingsInterface(self.conn)
         self.words_interface = WordsStatisticInterface(self.conn)
-
-    def get_table_data_as_list_dict(self, table_name: str) -> dict:
-        with self.conn.cursor() as cursor:
-            query = f"SELECT * FROM {table_name};"
-            return self.get_query_results_as_dict(query)
-
-bot_database = Database()

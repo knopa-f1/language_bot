@@ -2,11 +2,11 @@ import logging
 from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
-from aiogram.dispatcher.event.handler import HandlerObject
 from aiogram.types import TelegramObject, User
 from fluentogram import TranslatorHub
-from servises.servises import get_selected_data
-from servises.user_settings import UserSettings
+from keyboards.set_menu import set_main_menu
+from servises.buttons_services import get_selected_data
+from servises.users_service import UsersService
 
 logger = logging.getLogger(__name__)
 
@@ -23,22 +23,24 @@ class TranslatorRunnerMiddleware(BaseMiddleware):
         if user is None:
             return await handler(event, data)
 
-        # возможно, мы сменили язык в этом событии, попробуем получить его оттуда
-        callback_query = event.callback_query
-        if callback_query is not None and callback_query.data.startswith("button-language_"):
-            lang = get_selected_data(callback_query.data, "button-language_")
-        else:
-            # если нет, посмотрим в кэше и БД, если уж и там нет - из параметра сообщения
-            bot_database = data.get('bot_database')
-            users_cache = data.get('users_cache')
-            default_settings = data.get('default_settings')
-            lang = UserSettings.get(user.id, bot_database, users_cache, "lang")
-            if lang is None:
-                UserSettings.set(user.id, bot_database, users_cache, default_settings, lang=user.language_code)
-                lang = user.language_code
+        user_service: UsersService = data.get('user_service')
+        # maybe we changed the language, should try to check it
+        reset_menu = False
 
+        callback_query = event.callback_query
+        if callback_query is not None and callback_query.data.startswith("button-language"):
+            lang = get_selected_data(callback_query.data)
+            reset_menu = True
+        else:
+            lang = await user_service.get_user_settings(user.id, "lang")
+            if lang is None:
+                lang = user.language_code
         hub: TranslatorHub = data.get('_translator_hub')
-        data['i18n'] = hub.get_translator_by_locale(locale=lang)
-        data['lang'] = lang
+        i18n = hub.get_translator_by_locale(locale=lang)
+        data['user_service'].i18n = i18n
+        data['user_service'].lang = lang
+
+        if reset_menu:
+            await set_main_menu(event.bot, i18n)
 
         return await handler(event, data)

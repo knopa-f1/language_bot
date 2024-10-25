@@ -1,4 +1,4 @@
-start = Запуск бота
-help = Помощь по боту
-settings = Настройки
-statistics = Статистика
+command-start = Start bot
+command-help = Help
+command-settings = Settings
+command-statistics = Statistics

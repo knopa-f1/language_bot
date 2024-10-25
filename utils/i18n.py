@@ -1,13 +1,16 @@
 from enum import Enum
-
 from fluent_compiler.bundle import FluentBundle
-
 from fluentogram import FluentTranslator, TranslatorHub
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class Language(Enum):
     "Поддерживаемые языки"
     ru = "Русский"
     en = "English"
+
 
 def create_translator_hub() -> TranslatorHub:
     translator_hub = TranslatorHub(
@@ -22,7 +25,8 @@ def create_translator_hub() -> TranslatorHub:
                     locale="ru-RU",
                     filenames=["locales/ru/LC_MESSAGES/txt.ftl",
                                "locales/ru/LC_MESSAGES/buttons.ftl",
-                               "locales/ru/LC_MESSAGES/settings.ftl"
+                               "locales/ru/LC_MESSAGES/settings.ftl",
+                               "locales/ru/LC_MESSAGES/commands.ftl"
                                ])),
             FluentTranslator(
                 locale="en",
@@ -30,7 +34,8 @@ def create_translator_hub() -> TranslatorHub:
                     locale="en-US",
                     filenames=["locales/en/LC_MESSAGES/txt.ftl",
                                "locales/en/LC_MESSAGES/buttons.ftl",
-                               "locales/en/LC_MESSAGES/settings.ftl"
+                               "locales/en/LC_MESSAGES/settings.ftl",
+                               "locales/en/LC_MESSAGES/commands.ftl"
                                ]))
         ],
     )
