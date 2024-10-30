@@ -1,5 +1,5 @@
 from db.base import Base
-from sqlalchemy import BigInteger, String, Integer
+from sqlalchemy import BigInteger, String, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import logging
 
@@ -10,13 +10,12 @@ class User(Base):
     __tablename__ = "users"
 
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    frequency: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    start_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    end_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    lang: Mapped[str | None] = mapped_column(String, nullable=True)
+    chat_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    first_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    last_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    username: Mapped[str | None] = mapped_column(String, nullable=True)
+    language_code: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    words = relationship('UserCurrentWord', back_populates='user')
-
-    @property
-    def attributes_dict(self):
-        return {str(k): v for k, v in vars(self).items() if not k.startswith('_')}
+    @classmethod
+    def props(cls):
+        return [attr for attr in cls.__dict__ if not callable(getattr(cls, attr)) and not attr.startswith("_") and not attr.endswith("_id")]

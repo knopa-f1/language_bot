@@ -15,18 +15,18 @@ class Word(Base):
     translation_en: Mapped[str | None] = mapped_column(String, nullable=True)
     example: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    users = relationship('UserCurrentWord', back_populates='word')
+    chats = relationship('ChatCurrentWord', back_populates='word')
 
 
-class UserCurrentWord(Base):
-    __tablename__ = "users_current_words"
+class ChatCurrentWord(Base):
+    __tablename__ = "chats_current_words"
 
-    user_id: Mapped[int] = mapped_column(BigInteger,
-                                         ForeignKey("users.user_id", ondelete="CASCADE"),
+    chat_id: Mapped[int] = mapped_column(BigInteger,
+                                         ForeignKey("chats.chat_id", ondelete="CASCADE"),
                                          primary_key=True)
     word_id: Mapped[int] = mapped_column(BigInteger,
                                          ForeignKey("words.word_id", ondelete="CASCADE"),
                                          primary_key=True)
 
-    word: Mapped["Word"] = relationship("Word", back_populates="users")
-    user: Mapped["User"] = relationship("User", back_populates="words")
+    word: Mapped["Word"] = relationship("Word", back_populates="chats")
+    chat: Mapped["Chat"] = relationship("Chat", back_populates="words")

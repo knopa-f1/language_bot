@@ -20,6 +20,8 @@ change-frequency = ⏳ Choose how often (in hours) you want to receive reminders
 
 change-language = 🌐 Choose the bot's language.
 
+change-word-count = 📝 Choose the number of current learning words.
+
 saved-settings = ✔️ Great! Settings saved.
                  Shall we start learning right now?
 

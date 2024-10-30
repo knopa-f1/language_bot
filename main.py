@@ -3,7 +3,7 @@ import logging
 import sys
 
 from aiogram import Bot, Dispatcher
-from cache.users_cache import UserCache
+from cache.cache import Cache
 from config_data.constants import DefaultSettings
 
 from config_data.logging_config import setup_logging
@@ -12,6 +12,7 @@ from keyboards.set_menu import set_main_menu
 from config_data.config import Config, load_config
 from handlers import other_handlers, user_handlers
 from middlewares.session import DbSessionMiddleware
+from middlewares.users import TrackAllUsersMiddleware
 from servises.schedule_tasks import job_send_messages_to_users
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -35,7 +36,8 @@ async def main():
     # db
     engine = create_async_engine(
         url=str(config.db.dsn),
-        echo=True if config.env_type == "test" else False
+        echo=False
+        # echo=True if config.env_type == "test" else False
     )
 
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
@@ -49,10 +51,10 @@ async def main():
     # workflow_data
     default_settings = DefaultSettings()
     dp["default_settings"] = default_settings
-    dp["users_cache"] = UserCache()
+    dp["cache"] = Cache()
 
     # set Menu
-    await set_main_menu(bot, translator_hub.get_translator_by_locale(default_settings.user_set.lang))
+    await set_main_menu(bot, translator_hub.get_translator_by_locale(default_settings.chat_set.lang))
 
     # registration routers
     dp.include_router(user_handlers.router)
@@ -61,6 +63,7 @@ async def main():
     # registration middleware
     dp.update.outer_middleware(DbSessionMiddleware(session_maker))
     dp.update.middleware(TranslatorRunnerMiddleware())
+    dp.update.middleware(TrackAllUsersMiddleware())
 
     # schedule reminders
     scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot, translator_hub, session_maker))

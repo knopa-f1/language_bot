@@ -3,7 +3,6 @@ import redis
 import ujson
 
 from config_data.config import Config, load_config
-from config_data.constants import default_settings
 from dotenv import find_dotenv
 
 # класс наследуется от redis.StrictRedis
@@ -32,8 +31,7 @@ class Cache(redis.StrictRedis):
         return f'user:{user_id}:{name}'
 
     def set_user_cache(self, user_id, name, value):
-        print(value)
-        self.setex(self.cache_id(user_id, name), default_settings.cache_time, value)
+        self.setex(self.cache_id(user_id, name), 1800, value)
 
     def get_user_cache(self, user_id, name):
         return self.get(Cache.cache_id(user_id, name))

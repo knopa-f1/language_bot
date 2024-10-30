@@ -1,6 +1,6 @@
 from db import Word
-from db.models import UsersStatistic, Word, UserCurrentWord, Status
-from sqlalchemy import select, and_, or_, func, literal_column, case, Interval, Date
+from db.models import ChatStatistic, Word, ChatCurrentWord, Status
+from sqlalchemy import select, and_, or_, func, literal_column, case, Interval, Date, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert as upsert
 from typing import cast, Type
@@ -16,9 +16,9 @@ async def get_word_by_id(
     return await session.get(Word, {"word_id": word_id})
 
 
-async def add_current_user_words(
+async def add_current_chat_words(
         session: AsyncSession,
-        user_id: int,
+        chat_id: int,
         interval_days: int,
         count: int) -> None:
     status_new = Status.new
@@ -27,18 +27,18 @@ async def add_current_user_words(
     subquery = (
         select(Word.word_id)
         .outerjoin(
-            UsersStatistic,
+            ChatStatistic,
             and_(
-                UsersStatistic.user_id == user_id,
-                UsersStatistic.word_id == Word.word_id
+                ChatStatistic.chat_id == chat_id,
+                ChatStatistic.word_id == Word.word_id
             )
         )
         .filter(
             or_(
-                func.coalesce(UsersStatistic.status, status_new) == status_new,
+                func.coalesce(ChatStatistic.status, status_new) == status_new,
                 and_(
-                    func.coalesce(UsersStatistic.status, status_new) == status_learned,
-                    (func.now().cast(Date) - UsersStatistic.status_date.cast(Date)) <= interval_days
+                    func.coalesce(ChatStatistic.status, status_new) == status_learned,
+                    (func.now().cast(Date) - ChatStatistic.status_date.cast(Date)) <= interval_days
                 )
             )
         )
@@ -49,9 +49,9 @@ async def add_current_user_words(
 
     # general request
     insert_stmt = (
-        upsert(UserCurrentWord).from_select(
-            ['user_id', 'word_id'],
-            select(literal_column(str(user_id)), subquery.c.word_id)
+        upsert(ChatCurrentWord).from_select(
+            ['chat_id', 'word_id'],
+            select(literal_column(str(chat_id)), subquery.c.word_id)
         )
     )
 
@@ -62,22 +62,46 @@ async def add_current_user_words(
 
 async def delete_current_word(
         session: AsyncSession,
-        user_id: int,
+        chat_id: int,
         word_id: int
 ):
-    stmt = select(UserCurrentWord).where(and_(UserCurrentWord.user_id == user_id,
-                                              UserCurrentWord.word_id == word_id))
+    stmt = select(ChatCurrentWord).where(and_(ChatCurrentWord.chat_id == chat_id,
+                                              ChatCurrentWord.word_id == word_id))
     result = await session.execute(stmt)
     word = result.scalar()
     if word is not None:
         await session.delete(word)
 
 
+async def delete_random_current_words(
+        session: AsyncSession,
+        chat_id: int,
+        count: int
+):
+    subquery = (
+        select(ChatCurrentWord.word_id).
+        where(ChatCurrentWord.chat_id == chat_id).
+        order_by(func.random()).
+        limit(count).
+        subquery()
+    )
+    print(str(subquery))
+    stmt = (
+        delete(ChatCurrentWord).
+        where(
+            and_(ChatCurrentWord.chat_id == chat_id,
+                 ChatCurrentWord.word_id.in_(subquery)
+                 )
+        )
+    )
+    result = await session.execute(stmt)
+    await session.commit()
+
 async def current_words_exists(
         session: AsyncSession,
-        user_id: int
+        chat_id: int
 ) -> bool:
-    stmt = select(UserCurrentWord).where(UserCurrentWord.user_id == user_id)
+    stmt = select(ChatCurrentWord).where(ChatCurrentWord.chat_id == chat_id)
     result = await session.execute(stmt)
     word = result.scalar()
     return False if word is None else True
@@ -85,15 +109,15 @@ async def current_words_exists(
 
 async def get_words(
         session: AsyncSession,
-        user_id: int,
+        chat_id: int,
         count: int
 ) -> dict[str:list[Word]]:
     "return words - 1 from current_words, else - from word's dictionary"
 
     stmt = (
         select(Word)
-        .join(UserCurrentWord)
-        .filter(UserCurrentWord.user_id == user_id)
+        .join(ChatCurrentWord)
+        .filter(ChatCurrentWord.chat_id == chat_id)
         .order_by(func.random())  # ORDER BY RANDOM()
         .limit(1)
     )

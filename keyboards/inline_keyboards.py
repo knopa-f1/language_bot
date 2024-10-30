@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from config_data.constants import DefaultSettings
 from db.models import Word
 from fluentogram import TranslatorRunner
 from utils.i18n import Language
@@ -42,18 +43,23 @@ def create_inline_kb(width: int,
 class Keyboards:
     @staticmethod
     def start_keyboard(i18n: TranslatorRunner):
-        return create_inline_kb(2, i18n, 'button-settings', 'button-start')
+        return create_inline_kb(2, i18n, 'button-settings', 'button-statistics', 'button-start')
 
     @staticmethod
     def learn_keyboard(i18n: TranslatorRunner):
-        return create_inline_kb(2, i18n, 'button-start')
+        return create_inline_kb(2, i18n, 'button-settings', 'button-statistics', 'button-start')
+
+    @staticmethod
+    def stat_keyboard(i18n: TranslatorRunner):
+        return create_inline_kb(2, i18n, 'button-settings', 'button-start')
 
     @staticmethod
     def settings_keyboard(i18n: TranslatorRunner):
-        return create_inline_kb(3, i18n,
+        return create_inline_kb(1, i18n,
                                 'button-change-time',
                                 'button-change-frequency',
                                 'button-change-language',
+                                'button-change-word-count',
                                 last_btn="button-cancel-settings")
 
     @staticmethod
@@ -75,6 +81,12 @@ class Keyboards:
     def language_start_keyboard(i18n: TranslatorRunner):
         buttons = {f'button-language-start_{l.name}': l.value for l in Language}
         return create_inline_kb(3, i18n, **buttons)
+
+    @staticmethod
+    def word_count_keyboard(i18n: TranslatorRunner, default_settings: DefaultSettings):
+        buttons = {f'button-word-count_{number}': str(number) for number in default_settings.answer_set.vars_count_current}
+        return create_inline_kb(3, i18n, last_btn="button-cancel-settings", **buttons)
+
 
     @staticmethod
     def guess_word_keyboard(i18n: TranslatorRunner, words_list: list[Word], type_id: int, correct_id: int, lang):

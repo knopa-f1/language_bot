@@ -2,7 +2,7 @@ from typing import Callable, Awaitable, Dict, Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
-from servises.users_service import UsersService
+from servises.chat_interection_service import ChatInteractionService
 from sqlalchemy.ext.asyncio import async_sessionmaker
 import logging
 
@@ -21,9 +21,9 @@ class DbSessionMiddleware(BaseMiddleware):
             data: Dict[str, Any],
     ) -> Any:
         async with self.session_pool() as session:
-            data["user_service"] = UsersService(
+            data["chat_interaction_service"] = ChatInteractionService(
                 session=session,
-                cache=data.get('users_cache'),
+                cache=data.get('cache'),
                 default_settings=data.get('default_settings')
             )
             return await handler(event, data)

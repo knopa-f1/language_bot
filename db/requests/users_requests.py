@@ -1,57 +1,30 @@
-from typing import cast
-
-from sqlalchemy import select, and_
-from sqlalchemy.dialects.postgresql import insert as upsert
+from db import User
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from db.models import User
-import logging
-
-logger = logging.getLogger(__name__)
+from sqlalchemy.dialects.postgresql import insert as upsert
 
 
 async def upsert_user(
         session: AsyncSession,
         user_id: int,
-        default_user_settings: dict,
-        **kwargs
+        chat_id: int,
+        user_info: dict
 ) -> None:
-    kwargs["user_id"] = user_id
-    default_user_settings.update(kwargs)
+    user_info["user_id"] = user_id
+    user_info["chat_id"] = chat_id
+    stmt = upsert(User).values(user_info)
+    stmt = stmt.on_conflict_do_nothing()
 
-    stmt = upsert(User).values(default_user_settings)
-    stmt = stmt.on_conflict_do_update(
-        index_elements=['user_id'],
-        set_=kwargs,
-    )
     await session.execute(stmt)
     await session.commit()
 
 
 async def get_user(
         session: AsyncSession,
-        user_id: int
+        user_id: int,
+        chat_id: int
 ) -> User | None:
-
     user = await session.get(
-        User, {"user_id": user_id}
+        User, {"chat_id": chat_id,
+               "user_id": user_id}
     )
     return user
-
-
-async def get_users_to_reminder(
-        session: AsyncSession,
-        current_hour: int
-) -> list[User]:
-    stmt = select(User).where(and_(
-        User.start_time <= current_hour,
-        User.end_time >= current_hour,
-        (current_hour - User.start_time) % User.frequency == 0)
-    )
-    result = await session.execute(stmt)
-    users = result.scalars().all()
-    users = cast(list[User], users)
-    return users
-
-
-

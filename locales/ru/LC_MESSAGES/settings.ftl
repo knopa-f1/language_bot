@@ -3,6 +3,8 @@ settings-desctiption = ⚙️ НАСТРОЙКИ:
                        Время уведомлений с { $start_time }:00 по { $end_time }:00
                        Периодичность: каждый { $frequency } час
 
+                       Количество текущих изучаемых слов: { $count_current } шт.
+
                        Язык: { $lang }
 
 

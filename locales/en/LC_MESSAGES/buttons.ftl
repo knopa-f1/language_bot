@@ -1,11 +1,12 @@
 button-start = Let's go 🦔
 button-next = Next
-button-settings = Settings ⚙️
-button-statistics = Stat
+button-settings = ⚙️
+button-statistics = 📊
 button-change-time = Reminder schedule
 button-change-frequency = Frequency
 button-change-language = Language
-button-cancel-settings = Cancel
+button-change-word-count = Number of words
+button-cancel-settings = Back
 button-cancel-learning = Finish
 button-already-learned-0 = Don't want to learn
 button-already-learned-1 = Already know

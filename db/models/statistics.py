@@ -16,10 +16,10 @@ class Status(Enum):
     learned = "learned"
 
 
-class UsersStatistic(Base):
-    __tablename__ = "users_statistics"
+class ChatStatistic(Base):
+    __tablename__ = "chats_statistics"
 
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.user_id"), primary_key=True)
+    chat_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("chats.chat_id"), primary_key=True)
     word_id: Mapped[int] = mapped_column(Integer,
                                          ForeignKey("words.word_id", ondelete="CASCADE"),
                                          primary_key=True)
