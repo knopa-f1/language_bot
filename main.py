@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import datetime
 
 from aiogram import Bot, Dispatcher
 from cache.cache import Cache
@@ -42,7 +43,7 @@ async def main():
 
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
     translator_hub: TranslatorHub = create_translator_hub()
-    scheduler: AsyncIOScheduler = AsyncIOScheduler()
+    scheduler: AsyncIOScheduler = AsyncIOScheduler(timezone=datetime.timezone(datetime.timedelta(hours=+2)))
 
     # bot and dispatcher
     bot = Bot(token=config.tg_bot.token)
