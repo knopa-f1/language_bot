@@ -68,7 +68,7 @@ async def main():
 
     # schedule reminders
     scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot, translator_hub, session_maker))
-    # scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot,))
+    #scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot, translator_hub, session_maker))
     scheduler.start()
 
     # start polling

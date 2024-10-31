@@ -19,7 +19,7 @@ async def process_start_command(message: Message,
                                 chat_interaction_service: ChatInteractionService):
     if await chat_interaction_service.chat_settings_exists(message.chat.id):
         # chat is already in settings, should not ask a lang
-        keyboard = Keyboards.start_keyboard(chat_interaction_service.i18n)
+        keyboard = Keyboards.learn_keyboard(chat_interaction_service.i18n)
         text = chat_interaction_service.i18n.start()
     else:
         # ask a lang
@@ -173,11 +173,11 @@ async def process_button_language_press(callback: CallbackQuery,
                                         chat_interaction_service: ChatInteractionService):
     await chat_interaction_service.set_chat_settings(callback.message.chat,
                                                      lang=chat_interaction_service.lang)
+    keyboard = Keyboards.learn_keyboard(chat_interaction_service.i18n)
+
     if callback.data.startswith("button-language-start"):
-        keyboard = Keyboards.start_keyboard(chat_interaction_service.i18n)
         text = chat_interaction_service.i18n.start()
     else:
-        keyboard = Keyboards.learn_keyboard(chat_interaction_service.i18n)
         text = chat_interaction_service.i18n.saved.settings()
 
     await callback.message.edit_text(text=text,
@@ -252,3 +252,10 @@ async def process_button_already_know_word(callback: CallbackQuery,
                                            chat_interaction_service: ChatInteractionService):
     await ButtonWord(callback.message.chat.id, callback.data).mark_word_as_never_learn(chat_interaction_service)
     await process_button_start(callback, chat_interaction_service, chat_interaction_service.i18n.already.learned())
+
+
+# CallbackQuery data 'button-reminder'
+@router.callback_query(F.data.startswith('button-reminder'))
+async def process_button_reminder(callback: CallbackQuery,
+                                  chat_interaction_service: ChatInteractionService):
+    await callback.message.delete()

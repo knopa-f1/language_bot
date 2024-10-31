@@ -21,4 +21,4 @@ async def job_send_messages_to_users(bot: Bot,
     for chat_data in chat_list:
         i18n = translator_hub.get_translator_by_locale(locale=chat_data.lang)
         await bot.send_message(chat_data.chat_id, i18n.schedule.message(),
-                               reply_markup=Keyboards.learn_keyboard(i18n))
+                               reply_markup=Keyboards.reminder_keyboard(i18n))

@@ -50,6 +50,10 @@ class Keyboards:
         return create_inline_kb(2, i18n, 'button-settings', 'button-statistics', 'button-start')
 
     @staticmethod
+    def reminder_keyboard(i18n: TranslatorRunner):
+        return create_inline_kb(1, i18n, 'button-reminder')
+
+    @staticmethod
     def stat_keyboard(i18n: TranslatorRunner):
         return create_inline_kb(2, i18n, 'button-settings', 'button-start')
 
@@ -58,8 +62,8 @@ class Keyboards:
         return create_inline_kb(1, i18n,
                                 'button-change-time',
                                 'button-change-frequency',
-                                'button-change-language',
                                 'button-change-word-count',
+                                'button-change-language',
                                 last_btn="button-cancel-settings")
 
     @staticmethod

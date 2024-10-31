@@ -4,8 +4,8 @@ from dataclasses import dataclass, asdict
 @dataclass
 class DefaultChatSettings:
     frequency: int = 24
-    start_time: int = 18
-    end_time: int = 18
+    start_time: int = 19
+    end_time: int = 19
     lang = "ru"
     count_current: int = 10  # now learning words
 
