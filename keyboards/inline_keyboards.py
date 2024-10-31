@@ -68,7 +68,7 @@ class Keyboards:
         return create_inline_kb(8, i18n, last_btn="button-cancel-settings", **buttons)
 
     @staticmethod
-    def frequency_keyboard(i18n: TranslatorRunner, start: int = 1, end: int = 24):
+    def frequency_keyboard(i18n: TranslatorRunner, start: int = 0, end: int = 24):
         buttons = {f'button-frequency_{i}': str(i) for i in range(start, end + 1)}
         return create_inline_kb(8, i18n, last_btn="button-cancel-settings", **buttons)
 
