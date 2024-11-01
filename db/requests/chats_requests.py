@@ -1,7 +1,7 @@
 from typing import cast
 
 from db.models import Chat, ChatInfo
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, case
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -53,7 +53,11 @@ async def get_chats_to_reminder(
     stmt = select(Chat).where(and_(
         Chat.start_time <= current_hour,
         Chat.end_time >= current_hour,
-        (current_hour - Chat.start_time) % Chat.frequency == 0)
+        case(
+            (Chat.frequency == 0, False),
+            else_=(current_hour - Chat.start_time) % Chat.frequency == 0
+        )
+    )
     )
     result = await session.execute(stmt)
     chats = result.scalars().all()
