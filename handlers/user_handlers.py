@@ -250,12 +250,15 @@ async def process_button_cancel_learning(callback: CallbackQuery,
 @router.callback_query(F.data.startswith('button-already-learned'))
 async def process_button_already_know_word(callback: CallbackQuery,
                                            chat_interaction_service: ChatInteractionService):
-    await ButtonWord(callback.message.chat.id, callback.data).mark_word_as_never_learn(chat_interaction_service)
+    learned_type = get_selected_data(callback.data)
+    await ButtonWord(callback.message.chat.id, callback.data).mark_word_as_never_learn(chat_interaction_service, int(learned_type))
     await process_button_start(callback, chat_interaction_service, chat_interaction_service.i18n.already.learned())
+
 
 
 # CallbackQuery data 'button-reminder'
 @router.callback_query(F.data.startswith('button-reminder'))
-async def process_button_reminder(callback: CallbackQuery,
-                                  chat_interaction_service: ChatInteractionService):
+async def process_button_reminder(callback: CallbackQuery):
     await callback.message.delete()
+
+    

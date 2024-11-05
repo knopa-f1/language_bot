@@ -1,5 +1,5 @@
 from db.models import ChatStatistic, Status
-from sqlalchemy import select, and_, func, case
+from sqlalchemy import select, and_, func, case, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert as upsert
 import logging
@@ -13,6 +13,7 @@ async def get_chat_statistic(
 ) -> dict | None:
     default_status = Status.new
     learned_status = Status.learned
+    already_know_status = Status.already_know
 
     stmt = (
         select(
@@ -24,7 +25,8 @@ async def get_chat_statistic(
             ).label("correct_percent"),
             func.sum(
                 case(
-                    (func.coalesce(ChatStatistic.status, default_status) == learned_status, 1),
+                    (or_(func.coalesce(ChatStatistic.status, default_status) == learned_status,
+                         func.coalesce(ChatStatistic.status, default_status) == already_know_status), 1),
                     else_=0
                 )
             ).label("learned")

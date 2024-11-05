@@ -1,5 +1,5 @@
 from db.base import Base
-from sqlalchemy import BigInteger, String, Integer, ForeignKey
+from sqlalchemy import BigInteger, String, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import logging
 
@@ -15,6 +15,7 @@ class Chat(Base):
     end_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
     lang: Mapped[str | None] = mapped_column(String, nullable=True)
     count_current: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    blocked_bot: Mapped[bool] = mapped_column(Boolean, nullable=True, server_default="False")
 
     words = relationship('ChatCurrentWord', back_populates='chat')
 
@@ -26,7 +27,7 @@ class Chat(Base):
 class ChatInfo(Base):
     __tablename__ = "chats_info"
 
-    chat_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("chats.chat_id"), primary_key=True)
+    chat_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("chats.chat_id", ondelete="CASCADE"), primary_key=True)
     type: Mapped[str | None] = mapped_column(String, nullable=True)
     first_name: Mapped[str | None] = mapped_column(String, nullable=True)
     last_name: Mapped[str | None] = mapped_column(String, nullable=True)

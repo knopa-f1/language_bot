@@ -11,7 +11,7 @@ from db import User
 from db.models import Word, Status, Chat, ChatInfo
 from db.requests.statistics_requests import get_chat_statistic, save_statistic_by_word, should_del_current_word, \
     change_word_status
-from db.requests.chats_requests import get_chat, upsert_chat, get_chats_to_reminder
+from db.requests.chats_requests import get_chat, upsert_chat, get_chats_to_reminder, upsert_chat_info
 from db.requests.users_requests import upsert_user, get_user
 from db.requests.words_requests import add_current_chat_words, delete_current_word, current_words_exists, \
     get_words, get_word_by_id, delete_random_current_words
@@ -31,15 +31,13 @@ class ChatInteractionService:
     default_settings: DefaultSettings | None = None
     lang: str = ""
 
-
     @staticmethod
     def get_chat_info(chat: TChat):
-        return {atr: getattr(chat, atr) for atr in ChatInfo.props()}
+        return {atr: getattr(chat, atr, None) for atr in ChatInfo.props()}
 
     @staticmethod
     def get_user_info(user: TUser):
-        return {atr: getattr(user, atr) for atr in User.props()}
-
+        return {atr: getattr(user, atr, None) for atr in User.props()}
 
     async def user_exist(self,
                          user_id: int,
@@ -60,7 +58,6 @@ class ChatInteractionService:
                           chat_id,
                           ChatInteractionService.get_user_info(user))
 
-
     async def chat_settings_exists(self,
                                    chat_id: int) -> bool:
         return False if await get_chat(self.session, chat_id) is None else True
@@ -77,7 +74,7 @@ class ChatInteractionService:
                 self.cache.set_chat_settings(chat_id, **{name: value})
         return value
 
-    async def set_chat_settings(self, chat: TChat, **kwargs)-> None:
+    async def set_chat_settings(self, chat: TChat, **kwargs) -> None:
         self.cache.set_chat_settings(chat.id, **kwargs)
         await upsert_chat(self.session,
                           chat.id,
@@ -92,7 +89,12 @@ class ChatInteractionService:
         else:
             return self.i18n.settings.desctiption(**chat.attributes_dict)
 
-    async def set_count_current_words(self, chat:TChat, count_current:int)-> None:
+    async def set_chat_info(self, chat: TChat, **kwargs) -> None:
+        await upsert_chat_info(self.session,
+                               chat.id,
+                               **kwargs)
+
+    async def set_count_current_words(self, chat: TChat, count_current: int) -> None:
         last_count_current = await self.get_chat_settings(chat.id, "count_current")
         if last_count_current == count_current:
             return
@@ -103,7 +105,7 @@ class ChatInteractionService:
             print(f'add_current_chat_words {count_current - last_count_current}')
             await add_current_chat_words(self.session, chat.id, self.default_settings.answer_set.repeat_after_days,
                                          count_current - last_count_current)
-        await self.set_chat_settings(chat, count_current = count_current)
+        await self.set_chat_settings(chat, count_current=count_current)
 
     async def chats_list_to_send(self, current_hour: int) -> list:
         "Should we send the reminder to chats"
@@ -119,9 +121,10 @@ class ChatInteractionService:
     async def update_current_words(self,
                                    chat_id: int,
                                    word_id: int,
-                                   del_word: bool = False) -> None:
+                                   del_word: bool = False,
+                                   already_know: bool = False) -> None:
         if del_word:
-            status = Status.never_learn
+            status = Status.already_know if already_know else Status.never_learn
         elif await should_del_current_word(self.session,
                                            chat_id,
                                            word_id,
@@ -141,6 +144,12 @@ class ChatInteractionService:
                                        word_id: int
                                        ):
         await self.update_current_words(chat_id, word_id, True)
+
+    async def mark_word_as_already_know(self,
+                                        chat_id: int,
+                                        word_id: int
+                                        ):
+        await self.update_current_words(chat_id, word_id, True, True)
 
     async def get_words_to_learn(self,
                                  chat_id: int,

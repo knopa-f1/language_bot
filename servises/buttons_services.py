@@ -57,5 +57,10 @@ class ButtonWord:
                 f'● {correct_word.example}')
 
     async def mark_word_as_never_learn(self,
-                                       chat_service: ChatInteractionService) -> None:
-        await chat_service.mark_word_as_never_learn(self.chat_id, self.word_id)
+                                       chat_service: ChatInteractionService,
+                                       learned_type:int = 0) -> None:
+        if learned_type == 1:
+            await chat_service.mark_word_as_already_know(self.chat_id, self.word_id)
+        else:
+            await chat_service.mark_word_as_never_learn(self.chat_id, self.word_id)
+

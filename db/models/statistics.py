@@ -13,13 +13,14 @@ class Status(Enum):
     new = "new"
     in_progress = "in_progress"
     never_learn = "never_learn"
+    already_know = "already_know"
     learned = "learned"
 
 
 class ChatStatistic(Base):
     __tablename__ = "chats_statistics"
 
-    chat_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("chats.chat_id"), primary_key=True)
+    chat_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("chats.chat_id", ondelete="CASCADE"), primary_key=True)
     word_id: Mapped[int] = mapped_column(Integer,
                                          ForeignKey("words.word_id", ondelete="CASCADE"),
                                          primary_key=True)

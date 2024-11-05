@@ -1,8 +1,7 @@
 settings-desctiption = ⚙️ НАСТРОЙКИ:
 
                       Напоминания будут приходить:
-                      с { $start_time }:00 по { $end_time }:00 каждый { $frequency } час
-
+                      с { $start_time }:00 по { $end_time }:00 каждый { $frequency } час(а)(ов)
                       Количество текущих изучаемых слов: { $count_current } шт.
 
                       Язык: { $lang }

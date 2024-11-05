@@ -1,4 +1,3 @@
-from db import Word
 from db.models import ChatStatistic, Word, ChatCurrentWord, Status
 from sqlalchemy import select, and_, or_, func, literal_column, case, Interval, Date, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +22,7 @@ async def add_current_chat_words(
         count: int) -> None:
     status_new = Status.new
     status_learned = Status.learned
+    status_already_know = Status.already_know
 
     subquery = (
         select(Word.word_id)
@@ -37,7 +37,8 @@ async def add_current_chat_words(
             or_(
                 func.coalesce(ChatStatistic.status, status_new) == status_new,
                 and_(
-                    func.coalesce(ChatStatistic.status, status_new) == status_learned,
+                    or_(func.coalesce(ChatStatistic.status, status_new) == status_learned,
+                        func.coalesce(ChatStatistic.status, status_new) == status_already_know),
                     (func.now().cast(Date) - ChatStatistic.status_date.cast(Date)) <= interval_days
                 )
             )

@@ -11,7 +11,7 @@ from config_data.logging_config import setup_logging
 
 from keyboards.set_menu import set_main_menu
 from config_data.config import Config, load_config
-from handlers import other_handlers, user_handlers
+from handlers import other_handlers, user_handlers, chat_status_handlers
 from middlewares.session import DbSessionMiddleware
 from middlewares.users import TrackAllUsersMiddleware
 from servises.schedule_tasks import job_send_messages_to_users
@@ -37,8 +37,7 @@ async def main():
     # db
     engine = create_async_engine(
         url=str(config.db.dsn),
-        echo=False
-        # echo=True if config.env_type == "test" else False
+        echo=True if config.env_type == "test" else False
     )
 
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
@@ -59,6 +58,7 @@ async def main():
 
     # registration routers
     dp.include_router(user_handlers.router)
+    dp.include_router(chat_status_handlers.router)
     dp.include_router(other_handlers.router)
 
     # registration middleware
@@ -68,13 +68,12 @@ async def main():
 
     # schedule reminders
     scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot, translator_hub, session_maker))
-    #scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot, translator_hub, session_maker))
+    # scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot, translator_hub, session_maker))
     scheduler.start()
 
     # start polling
     await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot, allowed_updates=['message', 'callback_query'], _translator_hub=translator_hub)
-
+    await dp.start_polling(bot, _translator_hub=translator_hub)
 
 if __name__ == '__main__':
     if sys.platform == "win32":
