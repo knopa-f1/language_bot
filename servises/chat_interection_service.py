@@ -1,5 +1,6 @@
 import random
 from dataclasses import dataclass, asdict
+from datetime import datetime
 from typing import Type
 
 from aiogram.types import Chat as TChat
@@ -33,7 +34,9 @@ class ChatInteractionService:
 
     @staticmethod
     def get_chat_info(chat: TChat):
-        return {atr: getattr(chat, atr, None) for atr in ChatInfo.props()}
+        chat_info = {atr: getattr(chat, atr, None) for atr in ChatInfo.props()}
+        chat_info['start_date'] = datetime.now()
+        return chat_info
 
     @staticmethod
     def get_user_info(user: TUser):

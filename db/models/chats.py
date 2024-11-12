@@ -1,5 +1,7 @@
+from datetime import datetime
+
 from db.base import Base
-from sqlalchemy import BigInteger, String, Integer, ForeignKey, Boolean
+from sqlalchemy import BigInteger, String, Integer, ForeignKey, Boolean, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import logging
 
@@ -33,6 +35,7 @@ class ChatInfo(Base):
     last_name: Mapped[str | None] = mapped_column(String, nullable=True)
     username: Mapped[str | None] = mapped_column(String, nullable=True)
     title: Mapped[str | None] = mapped_column(String, nullable=True)
+    start_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), server_default='0001-01-01')
 
     @classmethod
     def props(cls):

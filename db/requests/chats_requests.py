@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 async def upsert_chat_info(session: AsyncSession,
                            chat_id: int,
                            **kwargs) -> None:
+
     kwargs["chat_id"] = chat_id
     stmt = upsert(ChatInfo).values(kwargs)
     stmt = stmt.on_conflict_do_update(
