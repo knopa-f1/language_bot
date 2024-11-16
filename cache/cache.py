@@ -25,4 +25,4 @@ class Cache:
         self.users.add((user_id, chat_id))
 
     def user_exist(self, user_id: int, chat_id: int):
-        return True if (user_id, chat_id) in self.users else False
+        return (user_id, chat_id) in self.users

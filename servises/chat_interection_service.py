@@ -111,7 +111,7 @@ class ChatInteractionService:
         await self.set_chat_settings(chat, count_current=count_current)
 
     async def chats_list_to_send(self, current_hour: int) -> list:
-        "Should we send the reminder to chats"
+        """Should we send the reminder to chats"""
         return await get_chats_to_reminder(self.session, current_hour)
 
     async def add_current_words(self, chat_id: int, count: int = None) -> None:
@@ -158,7 +158,7 @@ class ChatInteractionService:
                                  chat_id: int,
                                  count: int = 3
                                  ) -> dict:
-        "return words - 1 from current_words, else - from word's dictionary"
+        """return words - 1 from current_words, else - from word's dictionary"""
 
         if not await current_words_exists(self.session, chat_id):
             await self.add_current_words(chat_id)
