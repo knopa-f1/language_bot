@@ -1,7 +1,6 @@
 from aiogram import Bot
 from datetime import datetime
 
-from database.database import Database
 from keyboards.inline_keyboards import Keyboards
 from fluentogram import TranslatorHub
 from servises.chat_interection_service import ChatInteractionService

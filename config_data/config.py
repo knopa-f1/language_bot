@@ -1,44 +1,31 @@
 from dataclasses import dataclass
 from environs import Env
-from pydantic import PostgresDsn
+from pydantic import PostgresDsn, Field, validator, field_validator, BaseModel, ConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv, find_dotenv
+import os
+
+env_path = find_dotenv()
+load_dotenv(env_path)
+
+class DatabaseConfig(BaseSettings):
+    dns: PostgresDsn = Field("", alias="DNS")
 
 
-@dataclass
-class DatabaseConfig:
-    dsn: PostgresDsn
+class StorageConfig(BaseSettings):
+    redis_host: str = Field("", alias="REDIS_HOST")
+    redis_port: str = Field("", alias="REDIS_PORT")
+    redis_password: str = Field("", alias="REDIS_PASSWORD")
 
 
-@dataclass
-class StorageConfig:
-    redis_host: str
-    redis_port: str
-    redis_password: str
+class TgBot(BaseSettings):
+    token: str = Field(..., alias="bot_token")
 
 
-@dataclass
-class TgBot:
-    token: str
+class ConfigSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
+    tg_bot: TgBot = TgBot()
+    db: DatabaseConfig = DatabaseConfig()
+    redis: StorageConfig = StorageConfig()
+    env_type: str = Field("test", env="ENV_TYPE")
 
-
-@dataclass
-class Config:
-    tg_bot: TgBot
-    db: DatabaseConfig
-    redis: StorageConfig
-    env_type: str
-
-
-def load_config(path: str | None = None) -> Config:
-    env = Env()
-    env.read_env(path)
-    return Config(tg_bot=TgBot(token=env('BOT_TOKEN')),
-                  db=DatabaseConfig(
-                      dsn=env('DNS')
-                  ),
-                  redis=StorageConfig(
-                      redis_host=env('REDIS_HOST'),
-                      redis_port=env('REDIS_PORT'),
-                      redis_password=env('REDIS_PASSWORD')
-                  ),
-                  env_type=env('ENV_TYPE')
-                  )

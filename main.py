@@ -10,7 +10,7 @@ from config_data.constants import DefaultSettings
 from config_data.logging_config import setup_logging
 
 from keyboards.set_menu import set_main_menu
-from config_data.config import Config, load_config
+from config_data.config import ConfigSettings
 from handlers import other_handlers, user_handlers, chat_status_handlers
 from middlewares.session import DbSessionMiddleware
 from middlewares.users import TrackAllUsersMiddleware
@@ -28,7 +28,7 @@ from utils.i18n import create_translator_hub
 # start bot
 async def main():
     # load config
-    config: Config = load_config()
+    config: ConfigSettings = ConfigSettings()
 
     # logging
     setup_logging(config.env_type)
@@ -36,7 +36,7 @@ async def main():
 
     # db
     engine = create_async_engine(
-        url=str(config.db.dsn),
+        url=str(config.db.dns),
         echo=True if config.env_type == "test" else False
     )
 

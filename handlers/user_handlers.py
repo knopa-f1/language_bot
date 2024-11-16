@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Router, F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (Message, CallbackQuery)
 from keyboards.inline_keyboards import Keyboards
@@ -259,6 +260,11 @@ async def process_button_already_know_word(callback: CallbackQuery,
 # CallbackQuery data 'button-reminder'
 @router.callback_query(F.data.startswith('button-reminder'))
 async def process_button_reminder(callback: CallbackQuery):
-    await callback.message.delete()
+    try:
+        await callback.message.delete()
+    except TelegramBadRequest as e:
+        logger.error(f"Не удалось удалить сообщение для всех: {e}")
+
+
 
     
