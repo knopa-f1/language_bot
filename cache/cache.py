@@ -1,14 +1,14 @@
 import logging
 from collections import defaultdict
-from dataclasses import dataclass, field
+from cachetools import TTLCache
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
 class Cache:
-    chats_settings: dict = field(default_factory=defaultdict)
-    users: set[tuple] = field(default_factory=set)
+    def __init__(self, maxsize = 1000, ttl: int = 3600):
+        self.chats_settings = TTLCache(maxsize=maxsize, ttl=ttl)
+        self.users = TTLCache(maxsize=maxsize, ttl=ttl)
 
     def set_chat_settings(self, chat_id: int, **kwargs):
         if self.chats_settings.get(chat_id, None) is None:
@@ -22,7 +22,7 @@ class Cache:
         return self.chats_settings[chat_id].get(key, None)
 
     def set_user(self, user_id: int, chat_id: int):
-        self.users.add((user_id, chat_id))
+        self.users['user_id'] = chat_id
 
-    def user_exist(self, user_id: int, chat_id: int):
-        return (user_id, chat_id) in self.users
+    def user_exist(self, user_id: int):
+        return self.users.get('user_id', None) is not None

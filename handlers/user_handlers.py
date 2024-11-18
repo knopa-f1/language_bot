@@ -263,6 +263,7 @@ async def process_button_reminder(callback: CallbackQuery):
     try:
         await callback.message.delete()
     except TelegramBadRequest as e:
+
         logger.error(f"Не удалось удалить сообщение для всех: {e}")
 
 

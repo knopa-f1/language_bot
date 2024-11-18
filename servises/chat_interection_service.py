@@ -24,13 +24,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@dataclass
 class ChatInteractionService:
-    session: AsyncSession
-    cache: Cache | None = None
-    i18n: TranslatorRunner | None = None
-    default_settings: DefaultSettings | None = None
-    lang: str = ""
+
+    def __init__(self,
+                 session: AsyncSession,
+                 cache: Cache | None = None,
+                 i18n: TranslatorRunner | None = None,
+                 default_settings: DefaultSettings | None = None,
+                 lang: str = ""):
+        self.session = session
+        self.cache = cache
+        self.i18n = i18n
+        self.default_settings= default_settings
+        self.lang = lang
 
     @staticmethod
     def get_chat_info(chat: TChat):
@@ -46,7 +52,7 @@ class ChatInteractionService:
                          user_id: int,
                          chat_id: int
                          ) -> int | str | None:
-        user_exist = self.cache.user_exist(user_id, chat_id)
+        user_exist = self.cache.user_exist(user_id)
         if not user_exist:
             user: User | None = await get_user(self.session, user_id, chat_id)
             if user is not None:
@@ -102,10 +108,8 @@ class ChatInteractionService:
         if last_count_current == count_current:
             return
         elif last_count_current > count_current:
-            print(f'delete_random_current_words {last_count_current - count_current}')
             await delete_random_current_words(self.session, chat.id, last_count_current - count_current)
         else:
-            print(f'add_current_chat_words {count_current - last_count_current}')
             await add_current_chat_words(self.session, chat.id, self.default_settings.answer_set.repeat_after_days,
                                          count_current - last_count_current)
         await self.set_chat_settings(chat, count_current=count_current)

@@ -79,19 +79,15 @@ async def delete_random_current_words(
         chat_id: int,
         count: int
 ):
-    subquery = (
-        select(ChatCurrentWord.word_id).
-        where(ChatCurrentWord.chat_id == chat_id).
-        order_by(func.random()).
-        limit(count).
-        subquery()
-    )
-    print(str(subquery))
+
     stmt = (
         delete(ChatCurrentWord).
         where(
             and_(ChatCurrentWord.chat_id == chat_id,
-                 ChatCurrentWord.word_id.in_(subquery)
+                 ChatCurrentWord.word_id.in_(select(ChatCurrentWord.word_id).
+                                             where(ChatCurrentWord.chat_id == chat_id).
+                                             order_by(func.random()).
+                                             limit(count))
                  )
         )
     )
