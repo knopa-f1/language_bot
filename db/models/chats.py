@@ -12,11 +12,11 @@ class Chat(Base):
     __tablename__ = "chats"
 
     chat_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    frequency: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    start_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    end_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    lang: Mapped[str | None] = mapped_column(String, nullable=True)
-    count_current: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    frequency: Mapped[int | None] = mapped_column(Integer)
+    start_time: Mapped[int | None] = mapped_column(Integer)
+    end_time: Mapped[int | None] = mapped_column(Integer)
+    lang: Mapped[str | None] = mapped_column(String,  index=True)
+    count_current: Mapped[int | None] = mapped_column(Integer)
     blocked_bot: Mapped[bool] = mapped_column(Boolean, nullable=True, server_default="False")
 
     words = relationship('ChatCurrentWord', back_populates='chat')
@@ -30,7 +30,7 @@ class ChatInfo(Base):
     __tablename__ = "chats_info"
 
     chat_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("chats.chat_id", ondelete="CASCADE"), primary_key=True)
-    type: Mapped[str | None] = mapped_column(String, nullable=True)
+    type: Mapped[str | None] = mapped_column(String)
     first_name: Mapped[str | None] = mapped_column(String, nullable=True)
     last_name: Mapped[str | None] = mapped_column(String, nullable=True)
     username: Mapped[str | None] = mapped_column(String, nullable=True)

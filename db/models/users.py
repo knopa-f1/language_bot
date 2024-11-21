@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 class User(Base):
     __tablename__ = "users"
 
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     chat_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     first_name: Mapped[str | None] = mapped_column(String, nullable=True)

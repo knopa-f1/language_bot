@@ -10,10 +10,10 @@ class Word(Base):
     __tablename__ = "words"
 
     word_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    word: Mapped[str | None] = mapped_column(String, nullable=True)
-    translation_ru: Mapped[str | None] = mapped_column(String, nullable=True)
-    translation_en: Mapped[str | None] = mapped_column(String, nullable=True)
-    example: Mapped[str | None] = mapped_column(String, nullable=True)
+    word: Mapped[str | None] = mapped_column(String, index=True)
+    translation_ru: Mapped[str | None] = mapped_column(String, index=True)
+    translation_en: Mapped[str | None] = mapped_column(String, index=True)
+    example: Mapped[str | None] = mapped_column(String)
 
     chats = relationship('ChatCurrentWord', back_populates='word')
 
