@@ -5,7 +5,7 @@ from datetime import datetime
 
 from keyboards.inline_keyboards import Keyboards
 from fluentogram import TranslatorHub
-from servises.chat_interection_service import ChatInteractionService
+from services.reminder_service import ReminderService
 from sqlalchemy.ext.asyncio import async_sessionmaker
 import logging
 
@@ -29,8 +29,8 @@ async def job_send_messages_to_users(bot: Bot,
                                      session_pool: async_sessionmaker):
     logger.info(f"Start send_reminder")
     async with session_pool() as session:
-        chat_interaction_service = ChatInteractionService(session=session)
-        chat_list = await chat_interaction_service.chats_list_to_send(datetime.now().hour)
+        reminder_service = ReminderService(session=session)
+        chat_list = await reminder_service.chats_list_to_send(datetime.now().hour)
 
     tasks = []
     for chat_data in chat_list:

@@ -1,12 +1,11 @@
 import logging
-from collections import defaultdict
 from cachetools import TTLCache
 
 logger = logging.getLogger(__name__)
 
 
 class Cache:
-    def __init__(self, maxsize = 1000, ttl: int = 3600):
+    def __init__(self, maxsize=1000, ttl: int = 3600):
         self.chats_settings = TTLCache(maxsize=maxsize, ttl=ttl)
         self.users = TTLCache(maxsize=maxsize, ttl=ttl)
 

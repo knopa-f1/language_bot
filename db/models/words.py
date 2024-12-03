@@ -1,5 +1,5 @@
 from db.base import Base
-from sqlalchemy import BigInteger, String, ForeignKey, Integer
+from sqlalchemy import BigInteger, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import logging
 

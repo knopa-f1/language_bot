@@ -1,5 +1,5 @@
 from db.models import ChatStatistic, Word, ChatCurrentWord, Status
-from sqlalchemy import select, and_, or_, func, literal_column, case, Interval, Date, delete
+from sqlalchemy import select, and_, or_, func, literal_column, Date, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert as upsert
 from typing import cast, Type
@@ -56,7 +56,7 @@ async def add_current_chat_words(
         )
     )
 
-    # Выполняем вставку
+    # insert
     await session.execute(insert_stmt)
     await session.commit()
 
@@ -79,7 +79,6 @@ async def delete_random_current_words(
         chat_id: int,
         count: int
 ):
-
     stmt = (
         delete(ChatCurrentWord).
         where(
@@ -91,8 +90,9 @@ async def delete_random_current_words(
                  )
         )
     )
-    result = await session.execute(stmt)
+    await session.execute(stmt)
     await session.commit()
+
 
 async def current_words_exists(
         session: AsyncSession,
@@ -109,7 +109,7 @@ async def get_words(
         chat_id: int,
         count: int
 ) -> dict[str:list[Word]]:
-    "return words - 1 from current_words, else - from word's dictionary"
+    """return words - 1 from current_words, else - from word's dictionary"""
 
     stmt = (
         select(Word)

@@ -78,19 +78,19 @@ class Keyboards:
 
     @staticmethod
     def language_keyboard(i18n: TranslatorRunner):
-        buttons = {f'button-language_{l.name}': l.value for l in Language}
+        buttons = {f'button-language_{lan.name}': lan.value for lan in Language}
         return create_inline_kb(3, i18n, last_btn="button-cancel-settings", **buttons)
 
     @staticmethod
     def language_start_keyboard(i18n: TranslatorRunner):
-        buttons = {f'button-language-start_{l.name}': l.value for l in Language}
+        buttons = {f'button-language-start_{lan.name}': lan.value for lan in Language}
         return create_inline_kb(3, i18n, **buttons)
 
     @staticmethod
     def word_count_keyboard(i18n: TranslatorRunner, default_settings: DefaultSettings):
-        buttons = {f'button-word-count_{number}': str(number) for number in default_settings.answer_set.vars_count_current}
+        buttons = {f'button-word-count_{number}': str(number) for number in
+                   default_settings.answer_set.vars_count_current}
         return create_inline_kb(3, i18n, last_btn="button-cancel-settings", **buttons)
-
 
     @staticmethod
     def guess_word_keyboard(i18n: TranslatorRunner, words_list: list[Word], type_id: int, correct_id: int, lang):

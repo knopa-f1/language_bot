@@ -1,10 +1,9 @@
-from typing import Callable, Awaitable, Dict, Any, cast
+from typing import Callable, Awaitable, Dict, Any
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, Message, User, Chat
+from aiogram.types import TelegramObject, User, Chat
 
-from servises.chat_interection_service import ChatInteractionService
-from sqlalchemy.ext.asyncio import AsyncSession
+from services.user_chat_service import UserChatService
 
 
 class TrackAllUsersMiddleware(BaseMiddleware):
@@ -21,8 +20,8 @@ class TrackAllUsersMiddleware(BaseMiddleware):
         if user is None:
             return await handler(event, data)
 
-        chat_interaction_service: ChatInteractionService = data.get('chat_interaction_service')
+        user_chat_service: UserChatService = data.get('user_chat_service')
 
-        if not await chat_interaction_service.user_exist(user.id, chat.id):
-            await chat_interaction_service.set_user(user, chat.id)
+        if not await user_chat_service.user_exist(user.id, chat.id):
+            await user_chat_service.set_user(user, chat.id)
         return await handler(event, data)

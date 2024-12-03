@@ -1,12 +1,11 @@
-from dataclasses import dataclass
-from environs import Env
-from pydantic import PostgresDsn, Field, validator, field_validator, BaseModel, ConfigDict
+from pydantic import PostgresDsn, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv, find_dotenv
-import os
+
 
 env_path = find_dotenv()
 load_dotenv(env_path)
+
 
 class DatabaseConfig(BaseSettings):
     dns: PostgresDsn = Field("", alias="DNS")
@@ -28,4 +27,3 @@ class ConfigSettings(BaseSettings):
     db: DatabaseConfig = DatabaseConfig()
     redis: StorageConfig = StorageConfig()
     env_type: str = Field("test", env="ENV_TYPE")
-

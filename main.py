@@ -14,7 +14,7 @@ from config_data.config import ConfigSettings
 from handlers import other_handlers, user_handlers, chat_status_handlers
 from middlewares.session import DbSessionMiddleware
 from middlewares.users import TrackAllUsersMiddleware
-from servises.schedule_tasks import job_send_messages_to_users
+from services.schedule_tasks import job_send_messages_to_users
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -37,7 +37,7 @@ async def main():
     # db
     engine = create_async_engine(
         url=str(config.db.dns),
-        echo=True if config.env_type == "test" else False
+        # echo=True if config.env_type == "test" else False
     )
 
     session_maker = async_sessionmaker(engine, expire_on_commit=False)

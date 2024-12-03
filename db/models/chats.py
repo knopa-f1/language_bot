@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from db.base import Base
-from sqlalchemy import BigInteger, String, Integer, ForeignKey, Boolean, DateTime, func
+from sqlalchemy import BigInteger, String, Integer, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import logging
 

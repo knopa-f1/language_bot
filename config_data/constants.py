@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 
 @dataclass
@@ -9,6 +9,7 @@ class DefaultChatSettings:
     lang = "ru"
     count_current: int = 10  # now learning words
     blocked_bot = False
+
 
 @dataclass
 class DefaultAnswerSettings:

@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 class Language(Enum):
-    "Поддерживаемые языки"
     ru = "Русский"
     en = "English"
 

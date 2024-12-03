@@ -1,6 +1,6 @@
 from db.base import Base
-from sqlalchemy import BigInteger, String, Integer, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import BigInteger, String
+from sqlalchemy.orm import Mapped, mapped_column
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     chat_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     first_name: Mapped[str | None] = mapped_column(String, nullable=True)
