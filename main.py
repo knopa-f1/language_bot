@@ -12,6 +12,7 @@ from config_data.logging_config import setup_logging
 from keyboards.set_menu import set_main_menu
 from config_data.config import ConfigSettings
 from handlers import other_handlers, user_handlers, chat_status_handlers
+from middlewares.chat_event import ChatEventsMiddleware
 from middlewares.session import DbSessionMiddleware
 from middlewares.users import TrackAllUsersMiddleware
 from services.schedule_tasks import job_send_messages_to_users
@@ -65,6 +66,7 @@ async def main():
     dp.update.outer_middleware(DbSessionMiddleware(session_maker))
     dp.update.middleware(TranslatorRunnerMiddleware())
     dp.update.middleware(TrackAllUsersMiddleware())
+    dp.update.middleware(ChatEventsMiddleware())
 
     # schedule reminders
     scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot, translator_hub, session_maker))

@@ -46,3 +46,5 @@ cancel-learning = 😎 Great job!
 already-learned = 👌 Got it! I won’t show you that word anymore.
 
 schedule-message = 😉 Hey! It's time to learn new words!
+
+cannot-delete-message = Unfortunately, I can't delete the message:(

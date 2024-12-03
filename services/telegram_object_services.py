@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from aiogram.types import Chat, User
-from db import ChatInfo
+from aiogram.types import Chat, User as TUser
+from db import ChatInfo, User
 
 
 def get_chat_info(chat: Chat):
@@ -10,5 +10,5 @@ def get_chat_info(chat: Chat):
     return chat_info
 
 
-def get_user_info(user: User):
+def get_user_info(user: TUser):
     return {atr: getattr(user, atr, None) for atr in User.props()}

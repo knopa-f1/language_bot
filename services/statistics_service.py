@@ -1,4 +1,6 @@
-from db.requests.statistics_requests import get_chat_statistic, save_statistic_by_word
+import datetime
+
+from db.requests.statistics_requests import get_chat_statistic, save_statistic_by_word, upsert_chat_event_stat
 from services.base_service import BaseService
 
 
@@ -24,3 +26,9 @@ class StatisticsService(BaseService):
                              wrong: int = 0):
         await save_statistic_by_word(self.session, chat_id, word_id, correct, wrong)
         await self.word_management_service.update_current_words(chat_id, word_id)
+
+    async def save_event(self,
+                         chat_id: int,
+                         date: datetime.date):
+        await upsert_chat_event_stat(self.session, chat_id, date)
+

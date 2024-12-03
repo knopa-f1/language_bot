@@ -1,4 +1,7 @@
+import datetime
+
 from db.models import ChatStatistic, Status
+from db.models.statistics import ChatActivityStatistic
 from sqlalchemy import select, and_, func, case, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert as upsert
@@ -106,6 +109,19 @@ async def save_statistic_by_word(
             'wrong': ChatStatistic.wrong + wrong,
             'status': Status.in_progress
         }
+    )
+
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def upsert_chat_event_stat(session: AsyncSession,
+                                 chat_id: int,
+                                 date: datetime.date) -> None:
+    stmt = upsert(ChatActivityStatistic).values(chat_id=chat_id, date=date, event_count=1)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=['chat_id', 'date'],
+        set_={'event_count':ChatActivityStatistic.event_count + 1}
     )
 
     await session.execute(stmt)

@@ -5,6 +5,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (Message, CallbackQuery)
 from keyboards.inline_keyboards import Keyboards
+from services.base_service import Context
 from services.buttons_services import get_selected_data, get_selected_end_time, ButtonWord
 from services.statistics_service import StatisticsService
 from services.user_chat_service import UserChatService
@@ -38,8 +39,8 @@ async def process_start_command(message: Message,
 # command /help
 @router.message(Command(commands='help'))
 async def process_help_command(message: Message,
-                               user_chat_service: UserChatService):
-    await message.answer(text=user_chat_service.i18n.help())
+                               context: Context):
+    await message.answer(text=context.i18n.help())
 
 
 # command /settings
@@ -85,11 +86,11 @@ async def process_button_settings_press(callback: CallbackQuery,
 # CallbackQuery data 'button-cancel-settings'
 @router.callback_query(F.data == 'button-cancel-settings')
 async def process_button_cancel_settings_press(callback: CallbackQuery,
-                                               user_chat_service: UserChatService):
-    keyboard = Keyboards.learn_keyboard(user_chat_service.i18n)
+                                               context: Context):
+    keyboard = Keyboards.learn_keyboard(context.i18n)
 
     await callback.message.edit_text(
-        text=user_chat_service.i18n.cancel.settings(),
+        text=context.i18n.cancel.settings(),
         reply_markup=keyboard
     )
 
@@ -97,11 +98,11 @@ async def process_button_cancel_settings_press(callback: CallbackQuery,
 # CallbackQuery data 'button-change-time'
 @router.callback_query(F.data == 'button-change-time')
 async def process_button_change_time_press(callback: CallbackQuery,
-                                           user_chat_service: UserChatService):
-    keyboard = Keyboards.time_keyboard(user_chat_service.i18n)
+                                           context: Context):
+    keyboard = Keyboards.time_keyboard(context.i18n)
 
     await callback.message.edit_text(
-        text=user_chat_service.i18n.change.start.time(),
+        text=context.i18n.change.start.time(),
         reply_markup=keyboard
     )
 
@@ -109,13 +110,13 @@ async def process_button_change_time_press(callback: CallbackQuery,
 # CallbackQuery data 'button-start-time'
 @router.callback_query(F.data.startswith('button-start-time'))
 async def process_button_start_time_press(callback: CallbackQuery,
-                                          user_chat_service: UserChatService):
+                                          context: Context):
     selected_start_time = int(get_selected_data(callback.data))
-    keyboard = Keyboards.time_keyboard(user_chat_service.i18n,
+    keyboard = Keyboards.time_keyboard(context.i18n,
                                        f"button-end-time_{selected_start_time}", selected_start_time)
 
     await callback.message.edit_text(
-        text=user_chat_service.i18n.change.end.time(),
+        text=context.i18n.change.end.time(),
         reply_markup=keyboard
     )
 
@@ -137,11 +138,11 @@ async def process_button_end_time_press(callback: CallbackQuery,
 # CallbackQuery data 'button-change-frequency'
 @router.callback_query(F.data == 'button-change-frequency')
 async def process_button_change_frequency_press(callback: CallbackQuery,
-                                                user_chat_service: UserChatService):
-    keyboard = Keyboards.frequency_keyboard(user_chat_service.i18n)
+                                                context: Context):
+    keyboard = Keyboards.frequency_keyboard(context.i18n)
 
     await callback.message.edit_text(
-        text=user_chat_service.i18n.change.frequency(),
+        text=context.i18n.change.frequency(),
         reply_markup=keyboard
     )
 
@@ -161,11 +162,11 @@ async def process_button_frequency_press(callback: CallbackQuery,
 # CallbackQuery data 'button-change-language'
 @router.callback_query(F.data == 'button-change-language')
 async def process_button_change_language_press(callback: CallbackQuery,
-                                               user_chat_service: UserChatService):
-    keyboard = Keyboards.language_keyboard(user_chat_service.i18n)
+                                               context: Context):
+    keyboard = Keyboards.language_keyboard(context.i18n)
 
     await callback.message.edit_text(
-        text=user_chat_service.i18n.change.language(),
+        text=context.i18n.change.language(),
         reply_markup=keyboard
     )
 
@@ -190,12 +191,12 @@ async def process_button_language_press(callback: CallbackQuery,
 # CallbackQuery data 'button-change-word_count'
 @router.callback_query(F.data == 'button-change-word-count')
 async def process_button_change_word_count_press(callback: CallbackQuery,
-                                                 user_chat_service: UserChatService):
-    keyboard = Keyboards.word_count_keyboard(user_chat_service.i18n,
-                                             user_chat_service.default_settings)
+                                                 context: Context):
+    keyboard = Keyboards.word_count_keyboard(context.i18n,
+                                             context.default_settings)
 
     await callback.message.edit_text(
-        text=user_chat_service.i18n.change.word.count(),
+        text=context.i18n.change.word.count(),
         reply_markup=keyboard
     )
 
@@ -244,9 +245,9 @@ async def process_button_word(callback: CallbackQuery,
 # CallbackQuery data 'button-cancel-learning'
 @router.callback_query(F.data.startswith('button-cancel-learning'))
 async def process_button_cancel_learning(callback: CallbackQuery,
-                                         user_chat_service: UserChatService):
-    keyboard = Keyboards.learn_keyboard(user_chat_service.i18n)
-    await callback.message.edit_text(text=user_chat_service.i18n.cancel.learning(),
+                                         context: Context):
+    keyboard = Keyboards.learn_keyboard(context.i18n)
+    await callback.message.edit_text(text=context.i18n.cancel.learning(),
                                      reply_markup=keyboard)
 
 
@@ -262,9 +263,10 @@ async def process_button_already_know_word(callback: CallbackQuery,
 
 # CallbackQuery data 'button-reminder'
 @router.callback_query(F.data.startswith('button-reminder'))
-async def process_button_reminder(callback: CallbackQuery):
+async def process_button_reminder(callback: CallbackQuery,
+                                  context: Context):
     try:
         await callback.message.delete()
     except TelegramBadRequest as e:
-
-        logger.error(f"Не удалось удалить сообщение для всех: {e}")
+        await callback.answer(text=context.i18n.cannot.delete.message())
+        logger.error(f"Не удалось удалить сообщение: {e}")
