@@ -14,6 +14,8 @@ class Word(Base):
     translation_ru: Mapped[str | None] = mapped_column(String, index=True)
     translation_en: Mapped[str | None] = mapped_column(String, index=True)
     example: Mapped[str | None] = mapped_column(String)
+    example_ru: Mapped[str | None] = mapped_column(String)
+    example_en: Mapped[str | None] = mapped_column(String)
 
     chats = relationship('ChatCurrentWord', back_populates='word')
 

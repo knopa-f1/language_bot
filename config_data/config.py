@@ -8,7 +8,7 @@ load_dotenv(env_path)
 
 
 class DatabaseConfig(BaseSettings):
-    dns: PostgresDsn = Field("", alias="DNS")
+    dsn: PostgresDsn = Field("", alias="DSN")
 
 
 class StorageConfig(BaseSettings):

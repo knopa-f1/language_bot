@@ -37,8 +37,8 @@ async def main():
 
     # db
     engine = create_async_engine(
-        url=str(config.db.dns),
-        # echo=True if config.env_type == "test" else False
+        url=str(config.db.dsn),
+        echo=True if config.env_type == "test" else False
     )
 
     session_maker = async_sessionmaker(engine, expire_on_commit=False)

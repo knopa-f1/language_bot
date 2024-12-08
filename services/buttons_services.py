@@ -50,7 +50,8 @@ class ButtonWord:
         return (f'{word_service.i18n.correct.answer() if self.correct else word_service.i18n.wrong.answer()}\n\n'
                 f'{getattr(correct_word, f'translation_{word_service.lang}') if self.type_id == "1" else correct_word.word} '
                 f'- {correct_word.word if self.type_id == "1" else getattr(correct_word, f'translation_{word_service.lang}')}\n\n'
-                f'● {correct_word.example}')
+                f'<code>{correct_word.example}\n'
+                f'{getattr(correct_word, f'example_{word_service.lang}')}</code>')
 
     async def mark_word_as_never_learn(self,
                                        word_service: WordManagementService,
