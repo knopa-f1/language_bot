@@ -33,7 +33,7 @@ target_metadata = Base.metadata
 db_config: ConfigSettings = ConfigSettings()
 config.set_main_option(
     'sqlalchemy.url',
-    str(db_config.db.dns),
+    str(db_config.db.dsn),
 )
 
 # other values from the config, defined by the needs of env.py,
