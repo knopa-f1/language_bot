@@ -16,7 +16,7 @@ This bot was created to help users build their Lithuanian vocabulary from Russia
 - **SQLAlchemy ORM** and **Alembic**: For database integration and migration management.
 
 ### Status:  
-This bot is live and actively used in production, with **120+ active users**.  
+This bot is live and actively used in production, with **700+ active users**.  
 Try it yourself: [@SpeakLithuanianBot](https://t.me/SpeakLithuanianBot).
 
 ---
