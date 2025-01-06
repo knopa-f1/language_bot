@@ -1,9 +1,18 @@
+
+
 from db.base import Base
-from sqlalchemy import BigInteger, String, ForeignKey
+from sqlalchemy import BigInteger, String, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class WordType(Enum):
+    noun = "noun"
+    verb = "verb"
+    adjective = "adjective"
+    numeral = "numeral"
 
 
 class Word(Base):
@@ -11,6 +20,7 @@ class Word(Base):
 
     word_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     word: Mapped[str | None] = mapped_column(String, index=True)
+    type: Mapped[Enum[WordType] | None] = mapped_column(String, index=True, nullable=True)
     translation_ru: Mapped[str | None] = mapped_column(String, index=True)
     translation_en: Mapped[str | None] = mapped_column(String, index=True)
     example: Mapped[str | None] = mapped_column(String)
