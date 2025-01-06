@@ -124,7 +124,7 @@ async def get_words(
 
     stmt = (
         select(Word)
-        .where(Word.word_id != correct_word.word_id)
+        .where(Word.word_id != correct_word.word_id and Word.type == correct_word.type)
         .order_by(func.random())
         .limit(count)
     )
