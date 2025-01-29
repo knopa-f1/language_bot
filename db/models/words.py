@@ -12,7 +12,12 @@ class WordType(Enum):
     noun = "noun"
     verb = "verb"
     adjective = "adjective"
+    adverb = "adverb"
     numeral = "numeral"
+    phrase = "phrase"
+    particle = "particle"
+    pronoun = "pronoun"
+
 
 
 class Word(Base):
