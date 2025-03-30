@@ -43,7 +43,7 @@ async def main():
 
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
     translator_hub: TranslatorHub = create_translator_hub()
-    scheduler: AsyncIOScheduler = AsyncIOScheduler(timezone=datetime.timezone(datetime.timedelta(hours=+2)))
+    scheduler: AsyncIOScheduler = AsyncIOScheduler(timezone=datetime.timezone(datetime.timedelta(hours=+3)))
 
     # bot and dispatcher
     bot = Bot(token=config.tg_bot.token)
