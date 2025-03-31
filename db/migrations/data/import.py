@@ -16,7 +16,7 @@ def import_table():
     with open(EXPORT_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    with engine.connect() as conn:
+    with engine.begin() as conn:
         conn.execute(table.insert(), data)
 
     print(f"Данные из {EXPORT_FILE} импортированы в {TABLE_NAME}")
