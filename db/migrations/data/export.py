@@ -14,7 +14,7 @@ def export_table():
     table = Table(TABLE_NAME, metadata, autoload_with=engine)
 
     with engine.connect() as conn:
-        result = conn.execute(table.select()).fetchall()
+        result = conn.execute(table.select()).mappings()
         data = [dict(row) for row in result]
 
     with open(EXPORT_FILE, "w", encoding="utf-8") as f:
