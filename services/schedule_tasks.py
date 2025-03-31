@@ -26,11 +26,12 @@ async def send_reminder(chat_data,
 
 async def job_send_messages_to_users(bot: Bot,
                                      translator_hub: TranslatorHub,
-                                     session_pool: async_sessionmaker):
+                                     session_pool: async_sessionmaker,
+                                     timezone):
     logger.info(f"Start send_reminder")
     async with session_pool() as session:
         reminder_service = ReminderService(session=session)
-        chat_list = await reminder_service.chats_list_to_send(datetime.now().hour)
+        chat_list = await reminder_service.chats_list_to_send(datetime.now(timezone).hour)
 
     tasks = []
     for chat_data in chat_list:

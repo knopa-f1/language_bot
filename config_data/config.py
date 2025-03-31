@@ -27,3 +27,4 @@ class ConfigSettings(BaseSettings):
     db: DatabaseConfig = DatabaseConfig()
     redis: StorageConfig = StorageConfig()
     env_type: str = Field("test", env="ENV_TYPE")
+    timezone: int = Field(0, env="TIMEZONE")

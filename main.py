@@ -43,7 +43,7 @@ async def main():
 
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
     translator_hub: TranslatorHub = create_translator_hub()
-    scheduler: AsyncIOScheduler = AsyncIOScheduler(timezone=datetime.timezone(datetime.timedelta(hours=+3)))
+    scheduler: AsyncIOScheduler = AsyncIOScheduler(timezone=datetime.timezone(datetime.timedelta(hours=+config.timezone)))
 
     # bot and dispatcher
     bot = Bot(token=config.tg_bot.token)
@@ -69,8 +69,8 @@ async def main():
     dp.update.middleware(ChatEventsMiddleware())
 
     # schedule reminders
-    scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot, translator_hub, session_maker))
-    # scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot, translator_hub, session_maker))
+    scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot, translator_hub, session_maker, scheduler.timezone))
+    # scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot, translator_hub, session_maker, scheduler.timezone))
     scheduler.start()
 
     # start polling
