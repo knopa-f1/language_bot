@@ -57,6 +57,9 @@ class Keyboards:
     def stat_keyboard(i18n: TranslatorRunner):
         return create_inline_kb(2, i18n, 'button-settings', 'button-start')
 
+    def cancel_learning_keyboard(i18n: TranslatorRunner):
+        return create_inline_kb(2, i18n, 'button-cancel-learning')
+
     @staticmethod
     def settings_keyboard(i18n: TranslatorRunner):
         return create_inline_kb(1, i18n,
@@ -94,10 +97,17 @@ class Keyboards:
 
     @staticmethod
     def guess_word_keyboard(i18n: TranslatorRunner, words_list: list[Word], type_id: int, correct_id: int, lang):
-        # key = 'buttonWord_{word_id}_{answer_id}_{type}_{correct}'
+        # key = 'button-word_{word_id}_{answer_id}_{type}_{correct}'
         buttons = {f'button-word_{word.word_id}_{correct_id}_{type_id}_{int(correct_id == word.word_id)}':
                        getattr(word, f'translation_{lang}' if type_id == 1 else "word") for word in words_list}
         return create_inline_kb(1, i18n, **buttons)
+
+    @staticmethod
+    def letters_keyboard(i18n: TranslatorRunner, word_id: Word, shuffled_letters:list):
+        # key = 'button-letter_{word_id}_{letter_id}'
+        buttons = {f'button-letter_{word_id}_{index}': letter
+                        for index, letter in shuffled_letters}
+        return create_inline_kb(min(len(shuffled_letters),8), i18n, last_btn="button-cancel-learning", **buttons)
 
     @staticmethod
     def answer_word_keyboard(i18n: TranslatorRunner, word_info):

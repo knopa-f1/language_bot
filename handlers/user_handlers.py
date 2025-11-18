@@ -233,13 +233,22 @@ async def process_button_word(callback: CallbackQuery,
                               word_management_service: WordManagementService,
                               statistics_service: StatisticsService):
     button_word = ButtonWord(callback.message.chat.id, callback.data)
-    message_text = await button_word.answer_message(word_management_service, statistics_service)
+    message_text = await button_word.answer_message_for_word(word_management_service, statistics_service)
     keyboard = Keyboards.answer_word_keyboard(word_management_service.i18n, button_word)
     await callback.message.edit_text(
         message_text,
         reply_markup=keyboard,
         parse_mode='HTML'
     )
+
+# CallbackQuery data 'button-letter'
+@router.callback_query(F.data.startswith('button-letter'))
+async def process_button_letter(callback: CallbackQuery,
+                              word_management_service: WordManagementService,
+                              statistics_service: StatisticsService):
+    button_word = ButtonWord(callback.message.chat.id, callback.data)
+    text, kb = await button_word.answer_message_for_letter(word_management_service, statistics_service)
+    await callback.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
 
 
 # CallbackQuery data 'button-cancel-learning'

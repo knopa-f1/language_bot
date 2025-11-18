@@ -35,6 +35,8 @@ message-text-1 = translates as:
 
 message-text-2 = means:
 
+message-text-3 = Build the word letter by letter:
+
 correct-answer = ✅ That’s the right answer!
 
 wrong-answer = ❌ Wrong!
@@ -48,3 +50,13 @@ already-learned = 👌 Got it! I won’t show you that word anymore.
 schedule-message = 😉 Hey! It's time to learn new words!
 
 cannot-delete-message = Unfortunately, I can't delete the message:(
+
+correct-letter = ✅ Right!
+
+incorrect-letter = ❌ Wrong! Try again!
+
+correct-word-by-letters = ✅ That’s the right answer
+
+incorrect-word-by-letters = ❌ Too many attempts. The right word is
+
+error-no-current-word = ⚠️Oops... the current word not found.
