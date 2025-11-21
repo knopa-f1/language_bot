@@ -5,7 +5,7 @@ from db import Word
 from db.models import Status
 from db.requests.statistics_requests import should_del_current_word, change_word_status
 from db.requests.words_requests import delete_random_current_words, add_current_chat_words, delete_current_word, \
-    current_words_exists, get_words, get_word_by_id
+    current_words_exists, get_words, get_word_by_id, exists_short_word
 from keyboards.inline_keyboards import Keyboards
 from services.base_service import BaseService
 
@@ -53,6 +53,14 @@ class WordManagementService(BaseService):
     def _build_progress(target: str, pos: int) -> str:
         """Return progress string: already guessed prefix + underscores."""
         return target[:pos].upper() + "*" * (len(target) - pos)
+
+    async def _has_short_word(self, chat_id: int) -> bool:
+        """
+        Returns True if current_words contain at least one word <= max_len.
+        Uses DB-level exists_short_word for efficiency.
+        """
+        max_len = self.default_settings.answer_set.max_letter_len
+        return await exists_short_word(self.session, chat_id, max_len)
 
     def init_letters_state(self, chat_id, word_id, target, letters):
         self._letters_set_state(chat_id, {
@@ -116,14 +124,13 @@ class WordManagementService(BaseService):
 
     async def get_words_to_learn(self,
                                  chat_id: int,
-                                 count: int = 3
+                                 count: int = 3,
+                                 max_len: int | None = None
                                  ) -> dict:
-        """return words - 1 from current_words, else - from word's dictionary"""
-
         if not await current_words_exists(self.session, chat_id):
             await self.add_current_words(chat_id)
 
-        return await get_words(self.session, chat_id, count)
+        return await get_words(self.session, chat_id, count, max_len)
 
     async def get_word_by_id(self,
                              word_id: int
@@ -133,8 +140,13 @@ class WordManagementService(BaseService):
     async def prepare_words_to_learn(self,
                                      chat_id: int,
                                      answer_text: str = "") -> dict:
+        has_short = await self._has_short_word(chat_id)
+        max_letter_len = self.default_settings.answer_set.max_letter_len
 
-        type_id = random.randint(1, 3)  # type - 1 - find translate to word, 2 - word by translate, 3 - word by letters
+        # type - 1 - find translate to word, 2 - word by translate, 3 - word by letters
+        # allow type 3 ONLY when short words exist
+        type_pool = [1, 2, 3] if has_short else [1, 2]
+        type_id = random.choice(type_pool)
 
         if type_id in (1,2):
             words = await self.get_words_to_learn(chat_id)
@@ -152,7 +164,7 @@ class WordManagementService(BaseService):
             keyboard = Keyboards.guess_word_keyboard(self.i18n, words_list, type_id, answer_id, self.lang)
 
         else:
-            words = await self.get_words_to_learn(chat_id,0)
+            words = await self.get_words_to_learn(chat_id,0, max_letter_len)
             correct_word = words["correct_word"]
             message_text = (f'{answer_text}\n\n'
                             f'{self.i18n.get(f'message-text-{type_id}')} "{getattr(correct_word, f"translation_{self.lang}")}"')
@@ -182,6 +194,10 @@ class WordManagementService(BaseService):
                 f'<code>{correct_word.example}\n'
                 f'{getattr(correct_word, f'example_{self.lang}')}</code>')
 
+    def _build_letter_step_text(self, is_correct: bool, translation: str, progress: str) -> str:
+        prefix = self.i18n.correct.letter() if is_correct else self.i18n.incorrect.letter()
+        return f'{prefix}\n\n{translation}\n<b>{progress}</b>'
+
     async def process_letters(self,
                               button_word,
                               statistics_service: StatisticsService) -> tuple[str, InlineKeyboardMarkup|None]:
@@ -189,6 +205,9 @@ class WordManagementService(BaseService):
         chat_id = button_word.chat_id
         word_id = button_word.word_id
         index = button_word.index
+
+        word_ob = await self.get_word_by_id(word_id)
+        translation = getattr(word_ob, f'translation_{self.lang}')
 
         state = self._letters_get_state(chat_id)
         if not state or state["word_id"] != word_id:
@@ -209,18 +228,15 @@ class WordManagementService(BaseService):
             progress = self._build_progress(target, pos)
 
             if pos < len(target):
-                text = self.i18n.correct.letter() + f'<b>{progress}</b>'
+                text = self._build_letter_step_text(True, translation, progress)
                 kb = Keyboards.letters_keyboard(self.i18n, word_id, [l for l in letters if l[0] >= pos])
                 self._letters_set_state(chat_id, state)
                 return text, kb
 
             # Completed
             self._letters_clear_state(chat_id)
-            await statistics_service.save_statistic(chat_id, word_id, correct=1, wrong=0)
-
-            w = await self.get_word_by_id(word_id)
-            text = f"{self.i18n.correct.word.by.letters()}: {target} ({getattr(w, f'translation_{self.lang}')})"
             button_word.correct = True
+            text = await self.process_word(button_word, statistics_service)
             kb = Keyboards.answer_word_keyboard(self.i18n, button_word)
             return text, kb
 
@@ -231,17 +247,14 @@ class WordManagementService(BaseService):
         progress = self._build_progress(target, pos)
 
         if wrong < letter_attempts:
-            text = self.i18n.incorrect.letter() + f'<b>{progress}</b>'
+            text = self._build_letter_step_text(False, translation, progress)
             kb = Keyboards.letters_keyboard(self.i18n, word_id, [l for l in letters if l[0] >= pos])
             self._letters_set_state(chat_id, state)
             return text, kb
 
         # Fail (N mistakes)
         self._letters_clear_state(chat_id)
-        await statistics_service.save_statistic(chat_id, word_id, correct=0, wrong=1)
-
-        w = await self.get_word_by_id(word_id)
-        text = f"{self.i18n.incorrect.word.by.letters()}: {target} ({getattr(w, f'translation_{self.lang}')})"
         button_word.correct = False
+        text = await self.process_word(button_word, statistics_service)
         kb = Keyboards.answer_word_keyboard(self.i18n, button_word)
         return text, kb

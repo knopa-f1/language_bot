@@ -18,6 +18,7 @@ class DefaultAnswerSettings:
     repeat_after_days = 30  # repeat word after these days after learning
     vars_count_current = [5, 7, 10, 12, 15, 20]
     letter_attempts = 3
+    max_letter_len = 8
 
 
 @dataclass

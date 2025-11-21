@@ -107,9 +107,9 @@ async def current_words_exists(
 async def get_words(
         session: AsyncSession,
         chat_id: int,
-        count: int
+        count: int,
+        max_len: int | None = None
 ) -> dict[str:list[Word]]:
-    """return words - 1 from current_words, else - from word's dictionary"""
 
     stmt = (
         select(Word)
@@ -118,6 +118,9 @@ async def get_words(
         .order_by(func.random())  # ORDER BY RANDOM()
         .limit(1)
     )
+
+    if max_len is not None:
+        stmt = stmt.where(func.length(func.trim(Word.word)) <= max_len)
 
     result = await session.execute(stmt)
     correct_word: Word = result.scalar()
@@ -135,3 +138,19 @@ async def get_words(
 
     return dict(correct_word=correct_word,
                 variants=variants)
+
+async def exists_short_word(session, chat_id: int, max_len: int) -> bool:
+    stmt = (
+        select(func.count())
+        .select_from(ChatCurrentWord)
+        .join(Word, Word.word_id == ChatCurrentWord.word_id)
+        .where(
+            ChatCurrentWord.chat_id == chat_id,
+            func.length(func.trim(Word.word)) <= max_len
+        )
+    )
+
+    result = await session.execute(stmt)
+    count = result.scalar_one()
+
+    return count > 0
