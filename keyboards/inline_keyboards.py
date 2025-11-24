@@ -135,7 +135,7 @@ class Keyboards:
     def answer_word_keyboard(i18n: TranslatorRunner, word_info):
         buttons = {
             "button-cancel-learning": i18n.button.cancel.learning(),
-            f"button-already-learned_{word_info.correct_id}_{word_info.type_id}": i18n.get(
+            f"button-already-learned_{word_info.correct_id}_{word_info.type_id}_{int(word_info.correct)}": i18n.get(
                 f"button-already-learned-{int(word_info.correct)}"
             ),
             "button-next": i18n.button.next(),
