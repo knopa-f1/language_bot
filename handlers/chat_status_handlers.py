@@ -1,8 +1,9 @@
 import logging
 
 from aiogram import Router
-from aiogram.filters import ChatMemberUpdatedFilter, KICKED, MEMBER
-from aiogram.types import (ChatMemberUpdated)
+from aiogram.filters import KICKED, MEMBER, ChatMemberUpdatedFilter
+from aiogram.types import ChatMemberUpdated
+
 from services.user_chat_service import UserChatService
 
 logger = logging.getLogger(__name__)

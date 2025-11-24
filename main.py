@@ -1,49 +1,41 @@
 import asyncio
+import datetime
 import logging
 import sys
-import datetime
 
 from aiogram import Bot, Dispatcher
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
 from cache.cache import Cache
-from config_data.constants import DefaultSettings
-
-from config_data.logging_config import setup_logging
-
-from keyboards.set_menu import set_main_menu
 from config_data.config import ConfigSettings
-from handlers import other_handlers, user_handlers, chat_status_handlers
+from config_data.constants import DefaultSettings
+from config_data.logging_config import setup_logging
+from handlers import chat_status_handlers, other_handlers, user_handlers
+from keyboards.set_menu import set_main_menu
 from middlewares.chat_event import ChatEventsMiddleware
+from middlewares.i18n import TranslatorRunnerMiddleware
 from middlewares.session import DbSessionMiddleware
 from middlewares.users import TrackAllUsersMiddleware
 from services.schedule_tasks import job_send_messages_to_users
-
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-from fluentogram import TranslatorHub
-from middlewares.i18n import TranslatorRunnerMiddleware
-
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from utils.i18n import create_translator_hub
 
 
 # start bot
 async def main():
     # load config
-    config: ConfigSettings = ConfigSettings()
+    config = ConfigSettings()
 
     # logging
     setup_logging(config.env_type)
     logger = logging.getLogger(__name__)
 
     # db
-    engine = create_async_engine(
-        url=str(config.db.dsn),
-        echo=True if config.env_type == "test" else False
-    )
+    engine = create_async_engine(url=str(config.db.dsn), echo=True if config.env_type == "test" else False)
 
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
-    translator_hub: TranslatorHub = create_translator_hub()
-    scheduler: AsyncIOScheduler = AsyncIOScheduler(timezone=datetime.timezone(datetime.timedelta(hours=+config.timezone)))
+    translator_hub = create_translator_hub()
+    scheduler = AsyncIOScheduler(timezone=datetime.timezone(datetime.timedelta(hours=+config.timezone)))
 
     # bot and dispatcher
     bot = Bot(token=config.tg_bot.token)
@@ -69,7 +61,12 @@ async def main():
     dp.update.middleware(ChatEventsMiddleware())
 
     # schedule reminders
-    scheduler.add_job(job_send_messages_to_users, 'cron', hour='*', args=(bot, translator_hub, session_maker, scheduler.timezone))
+    scheduler.add_job(
+        job_send_messages_to_users,
+        "cron",
+        hour="*",
+        args=(bot, translator_hub, session_maker, scheduler.timezone),
+    )
     # scheduler.add_job(job_send_messages_to_users, 'cron', minute='*', args=(bot, translator_hub, session_maker, scheduler.timezone))
     scheduler.start()
 
@@ -77,7 +74,8 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, _translator_hub=translator_hub)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(main())

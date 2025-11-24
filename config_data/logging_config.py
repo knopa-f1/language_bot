@@ -7,9 +7,7 @@ def setup_logging(env_type: str) -> None:
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
-            "standard": {
-                "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-            },
+            "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
         },
         "handlers": {
             "console": {
@@ -24,7 +22,7 @@ def setup_logging(env_type: str) -> None:
                 "level": "DEBUG" if env_type == "test" else "INFO",
                 "when": "midnight",
                 "interval": 1,  # every day
-                "backupCount": 30
+                "backupCount": 30,
             },
         },
         "root": {

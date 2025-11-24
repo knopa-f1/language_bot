@@ -1,9 +1,10 @@
+import logging
 from datetime import datetime
 
-from db.base import Base
-from sqlalchemy import BigInteger, String, Integer, ForeignKey, Boolean, DateTime
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import logging
+
+from db.base import Base
 
 logger = logging.getLogger(__name__)
 
@@ -15,15 +16,15 @@ class Chat(Base):
     frequency: Mapped[int | None] = mapped_column(Integer)
     start_time: Mapped[int | None] = mapped_column(Integer)
     end_time: Mapped[int | None] = mapped_column(Integer)
-    lang: Mapped[str | None] = mapped_column(String,  index=True)
+    lang: Mapped[str | None] = mapped_column(String, index=True)
     count_current: Mapped[int | None] = mapped_column(Integer)
     blocked_bot: Mapped[bool] = mapped_column(Boolean, nullable=True, server_default="False")
 
-    words = relationship('ChatCurrentWord', back_populates='chat')
+    words = relationship("ChatCurrentWord", back_populates="chat")
 
     @property
     def attributes_dict(self):
-        return {str(k): v for k, v in vars(self).items() if not k.startswith('_')}
+        return {str(k): v for k, v in vars(self).items() if not k.startswith("_")}
 
 
 class ChatInfo(Base):
@@ -35,9 +36,12 @@ class ChatInfo(Base):
     last_name: Mapped[str | None] = mapped_column(String, nullable=True)
     username: Mapped[str | None] = mapped_column(String, nullable=True)
     title: Mapped[str | None] = mapped_column(String, nullable=True)
-    start_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), server_default='0001-01-01')
+    start_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), server_default="0001-01-01")
 
     @classmethod
     def props(cls):
-        return [attr for attr in cls.__dict__ if
-                not callable(getattr(cls, attr)) and not attr.startswith("_") and not attr.endswith("_id")]
+        return [
+            attr
+            for attr in cls.__dict__
+            if not callable(getattr(cls, attr)) and not attr.startswith("_") and not attr.endswith("_id")
+        ]

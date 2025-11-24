@@ -1,15 +1,14 @@
 import asyncio
+import sys
 from logging.config import fileConfig
 
-from config_data.config import ConfigSettings
-from db import Base
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
-
-import sys
+from config_data.config import ConfigSettings
+from db import Base
 
 # Устанавливаем WindowsSelectorEventLoopPolicy для Windows
 if sys.platform == "win32":
@@ -32,7 +31,7 @@ target_metadata = Base.metadata
 
 db_config: ConfigSettings = ConfigSettings()
 config.set_main_option(
-    'sqlalchemy.url',
+    "sqlalchemy.url",
     str(db_config.db.dsn),
 )
 

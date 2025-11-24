@@ -1,4 +1,5 @@
 import logging
+
 from cachetools import TTLCache
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ class Cache:
         return self.chats_settings[chat_id].get(key, None)
 
     def set_user(self, user_id: int, chat_id: int):
-        self.users['user_id'] = chat_id
+        self.users["user_id"] = chat_id
 
     def user_exist(self, user_id: int):
-        return self.users.get('user_id', None) is not None
+        return self.users.get("user_id", None) is not None

@@ -1,10 +1,11 @@
-from typing import Callable, Awaitable, Dict, Any
+import logging
+from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
-from services.base_service import Context
 from sqlalchemy.ext.asyncio import async_sessionmaker
-import logging
+
+from services.base_service import Context
 
 logger = logging.getLogger(__name__)
 
@@ -15,15 +16,15 @@ class DbSessionMiddleware(BaseMiddleware):
         self.session_pool = session_pool
 
     async def __call__(
-            self,
-            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
-            data: Dict[str, Any],
+        self,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: Dict[str, Any],
     ) -> Any:
         async with self.session_pool() as session:
             data["context"] = Context(
                 session=session,
-                cache=data.get('cache'),
-                default_settings=data.get('default_settings')
+                cache=data.get("cache"),
+                default_settings=data.get("default_settings"),
             )
             return await handler(event, data)

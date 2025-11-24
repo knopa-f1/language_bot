@@ -1,6 +1,7 @@
+import logging
+
 from aiogram import Router
 from aiogram.types import Message
-import logging
 
 from services.base_service import Context
 
@@ -12,4 +13,4 @@ router = Router()
 # any commands, except "/start" и "/help"
 @router.message()
 async def send_message(message: Message, context: Context):
-    await message.reply(text=context.i18n.no.answer())
+    await message.reply(text=context.i18n.no.answer())  # type: ignore[union-attr]

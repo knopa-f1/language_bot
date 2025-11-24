@@ -1,12 +1,19 @@
-from cache.cache import Cache
-from config_data.constants import DefaultSettings
 from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from cache.cache import Cache
+from config_data.constants import DefaultSettings
+
 
 class Context:
-    def __init__(self, session: AsyncSession, cache: Cache | None = None, i18n: TranslatorRunner | None = None,
-                 default_settings: DefaultSettings | None = None, lang: str = ""):
+    def __init__(
+        self,
+        session: AsyncSession,
+        cache: Cache | None = None,
+        i18n: TranslatorRunner | None = None,
+        default_settings: DefaultSettings | None = None,
+        lang: str = "",
+    ):
         self.session = session
         self.cache = cache
         self.i18n = i18n

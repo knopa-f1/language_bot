@@ -1,13 +1,15 @@
 import json
-from sqlalchemy import create_engine, Table, MetaData
+
+from sqlalchemy import MetaData, Table, create_engine
 
 from config_data.config import ConfigSettings
 
 TABLE_NAME = "words"
 EXPORT_FILE = "table_data.json"
 
+
 def import_table():
-    config: ConfigSettings = ConfigSettings()
+    config = ConfigSettings()
     engine = create_engine(str(config.db.dsn))
     metadata = MetaData()
     metadata.reflect(engine, only=[TABLE_NAME])
@@ -20,6 +22,7 @@ def import_table():
         conn.execute(table.insert(), data)
 
     print(f"Данные из {EXPORT_FILE} импортированы в {TABLE_NAME}")
+
 
 if __name__ == "__main__":
     import_table()

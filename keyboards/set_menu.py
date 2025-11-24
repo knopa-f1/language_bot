@@ -1,15 +1,16 @@
+import logging
+
 from aiogram import Bot
 from fluentogram import TranslatorRunner
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 commands: dict[str, str] = {
-    '/start': 'command-start',
-    '/help': 'command-help',
-    '/settings': 'command-settings',
-    '/statistics': 'command-statistics'
+    "/start": "command-start",
+    "/help": "command-help",
+    "/settings": "command-settings",
+    "/statistics": "command-statistics",
 }
 
 

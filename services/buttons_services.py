@@ -17,10 +17,11 @@ def get_selected_end_time(data: str) -> tuple:
     data_lst = data.split("_")
     return data_lst[-2], data_lst[-1]
 
+
 class ButtonWord:
     def __init__(self, chat_id, callback_data):
         self.chat_id = chat_id
-        parts = callback_data.split('_')
+        parts = callback_data.split("_")
 
         if parts[0] == "button-word":
             self.word_id = int(parts[1])
@@ -41,23 +42,22 @@ class ButtonWord:
             self.correct = None
             self.index = int(parts[2])
 
-    async def answer_message_for_word(self,
-                                      service:WordManagementService,
-                                      statistics_service:StatisticsService) -> str:
+    async def answer_message_for_word(
+        self, service: WordManagementService, statistics_service: StatisticsService
+    ) -> str:
         return await service.process_word(self, statistics_service)
 
-    async def answer_message_for_letter(self,
-                                        service:WordManagementService,
-                                        statistics_service:StatisticsService) -> tuple[str, InlineKeyboardMarkup|None]:
+    async def answer_message_for_letter(
+        self, service: WordManagementService, statistics_service: StatisticsService
+    ) -> tuple[str, InlineKeyboardMarkup | None]:
         return await service.process_letters(self, statistics_service)
 
-    async def mark_word_as_never_learn(self,
-                                       word_service: WordManagementService,
-                                       learned_type: int = 0) -> None:
+    async def mark_word_as_never_learn(self, word_service: WordManagementService, learned_type: int = 0) -> None:
         if learned_type == 1:
             await word_service.mark_word_as_already_know(self.chat_id, self.word_id)
         else:
             await word_service.mark_word_as_never_learn(self.chat_id, self.word_id)
+
 
 # class ButtonLetter:
 #     def __init__(self, chat_id, callback_data):

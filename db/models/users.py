@@ -1,7 +1,9 @@
-from db.base import Base
+import logging
+
 from sqlalchemy import BigInteger, String
 from sqlalchemy.orm import Mapped, mapped_column
-import logging
+
+from db.base import Base
 
 logger = logging.getLogger(__name__)
 
@@ -18,4 +20,8 @@ class User(Base):
 
     @classmethod
     def props(cls):
-        return [attr for attr in cls.__dict__ if not callable(getattr(cls, attr)) and not attr.startswith("_") and not attr.endswith("_id")]
+        return [
+            attr
+            for attr in cls.__dict__
+            if not callable(getattr(cls, attr)) and not attr.startswith("_") and not attr.endswith("_id")
+        ]
