@@ -6,25 +6,19 @@ from aiogram.types import InlineKeyboardMarkup
 
 from db import Word
 from db.models import Status
-from db.requests.statistics_requests import change_word_status, should_del_current_word
-from db.requests.words_requests import (
-    add_current_chat_words,
-    current_words_exists,
-    delete_current_word,
-    delete_random_current_words,
-    exists_short_word,
-    get_word_by_id,
-    get_words,
-)
+from db.repositories.statistics import StatisticsRepository
+from db.repositories.words import WordsRepository
 from keyboards.inline_keyboards import Keyboards
 from services.base_service import BaseService
 from services.statistics_service import StatisticsService
 
 
 class WordManagementService(BaseService):
-    def __init__(self, context, user_chat_service):
+    def __init__(self, context, user_chat_service, words_repo: WordsRepository, stats_repo: StatisticsRepository):
         super().__init__(context)
         self.user_chat_service = user_chat_service
+        self.words_repo = words_repo
+        self.stats_repo = stats_repo
 
     def _letters_get_state(self, chat_id):
         return self.cache.get_chat_settings(chat_id, "letters_state")
@@ -66,7 +60,7 @@ class WordManagementService(BaseService):
         Uses DB-level exists_short_word for efficiency.
         """
         max_len = self.default_settings.answer_set.max_letter_len
-        return await exists_short_word(self.session, chat_id, max_len)
+        return await self.words_repo.exists_short_word(chat_id, max_len)
 
     def init_letters_state(self, chat_id, word_id, target, letters):
         self._letters_set_state(
@@ -85,10 +79,9 @@ class WordManagementService(BaseService):
         if last_count_current == count_current:
             return
         elif last_count_current > count_current:
-            await delete_random_current_words(self.session, chat.id, last_count_current - count_current)
+            await self.words_repo.delete_random_current_words(chat.id, last_count_current - count_current)
         else:
-            await add_current_chat_words(
-                self.session,
+            await self.words_repo.add_current_chat_words(
                 chat.id,
                 self.default_settings.answer_set.repeat_after_days,
                 count_current - last_count_current,
@@ -100,7 +93,7 @@ class WordManagementService(BaseService):
             count = await self.user_chat_service.get_chat_settings(chat_id, "count_current")
         repeat_after_days = self.default_settings.answer_set.repeat_after_days
 
-        await add_current_chat_words(self.session, chat_id, repeat_after_days, count)
+        await self.words_repo.add_current_chat_words(chat_id, repeat_after_days, count)
 
     async def update_current_words(
         self,
@@ -111,8 +104,7 @@ class WordManagementService(BaseService):
     ) -> None:
         if del_word:
             status = Status.already_know if already_know else Status.never_learn
-        elif await should_del_current_word(
-            self.session,
+        elif await self.stats_repo.should_del_current_word(
             chat_id,
             word_id,
             self.default_settings.answer_set.count_correct,
@@ -122,10 +114,10 @@ class WordManagementService(BaseService):
         else:
             return
 
-        await delete_current_word(self.session, chat_id, word_id)
+        await self.words_repo.delete_current_word(chat_id, word_id)
 
         await self.add_current_words(chat_id, count=1)
-        await change_word_status(self.session, chat_id, word_id, status)
+        await self.stats_repo.change_word_status(chat_id, word_id, status)
 
     async def mark_word_as_never_learn(self, chat_id: int, word_id: int):
         await self.update_current_words(chat_id, word_id, True)
@@ -134,13 +126,13 @@ class WordManagementService(BaseService):
         await self.update_current_words(chat_id, word_id, True, True)
 
     async def get_words_to_learn(self, chat_id: int, count: int = 3, max_len: int | None = None) -> dict:
-        if not await current_words_exists(self.session, chat_id):
+        if not await self.words_repo.current_words_exists(chat_id):
             await self.add_current_words(chat_id)
 
-        return await get_words(self.session, chat_id, count, max_len)
+        return await self.words_repo.get_words(chat_id, count, max_len)
 
     async def get_word_by_id(self, word_id: int) -> Type[Word] | None:
-        return await get_word_by_id(self.session, word_id)
+        return await self.words_repo.get_word_by_id(word_id)
 
     async def prepare_words_to_learn(self, chat_id: int, answer_text: str = "") -> dict:
         has_short = await self._has_short_word(chat_id)

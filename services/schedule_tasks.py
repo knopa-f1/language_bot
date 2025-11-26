@@ -6,6 +6,7 @@ from aiogram import Bot
 from fluentogram import TranslatorHub
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from db.repositories.chats import ChatsRepository
 from keyboards.inline_keyboards import Keyboards
 from services.reminder_service import ReminderService
 
@@ -30,7 +31,8 @@ async def job_send_messages_to_users(
 ):
     logger.info("Start send_reminder")
     async with session_pool() as session:
-        reminder_service = ReminderService(session=session)
+        chats_repo = ChatsRepository(session)
+        reminder_service = ReminderService(chats_repo=chats_repo)
         chat_list = await reminder_service.chats_list_to_send(datetime.now(timezone).hour)
 
     tasks = []

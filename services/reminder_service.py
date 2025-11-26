@@ -1,12 +1,10 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from db.requests.chats_requests import get_chats_to_reminder
+from db.repositories.chats import ChatsRepository
 
 
 class ReminderService:
-    def __init__(self, session: AsyncSession):
-        self.session = session
+    def __init__(self, chats_repo: ChatsRepository):
+        self.chats_repo = chats_repo
 
     async def chats_list_to_send(self, current_hour: int) -> list:
         """Should we send the reminder to chats"""
-        return await get_chats_to_reminder(self.session, current_hour)
+        return await self.chats_repo.get_chats_to_reminder(current_hour)
