@@ -22,8 +22,10 @@ class UserChatService(BaseService):
         self.chats_repo = chats_repo
         self.users_repo = users_repo
 
-    async def user_exist(self, user_id: int, chat_id: int) -> int | str | None:
-        user_exist = self.cache.user_exist(user_id)
+    async def user_exists(self, user_id: int, chat_id: int) -> int | str | None:
+        user_exist = self.cache.user_exists(
+            user_id,
+        )
         if not user_exist:
             user: User | None = await self.users_repo.get_user(user_id, chat_id)
             if user is not None:
