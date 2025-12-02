@@ -35,3 +35,4 @@ class ConfigSettings(BaseSettings):
     redis: StorageConfig = StorageConfig()
     env_type: str = Field("test", env="ENV_TYPE")
     timezone: int = Field(0, env="TIMEZONE")
+    is_docker: bool = Field(False, env="IN_DOCKER")

@@ -27,7 +27,7 @@ async def main():
     config = ConfigSettings()
 
     # logging
-    setup_logging(config.env_type)
+    setup_logging(config.env_type, config.is_docker)
     logger = logging.getLogger(__name__)
 
     # db
