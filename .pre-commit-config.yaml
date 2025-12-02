@@ -27,4 +27,5 @@ repos:
       - id: mypy
         additional_dependencies:
           - types-PyYAML
+          - types-cachetools
         exclude: ^migration/

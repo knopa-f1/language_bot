@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 
 class Cache:
     def __init__(self, maxsize=1000, ttl: int = 3600):
-        self.chats_settings = TTLCache(maxsize=maxsize, ttl=ttl)
-        self.users = TTLCache(maxsize=maxsize, ttl=ttl)
+        self.chats_settings: TTLCache = TTLCache(maxsize=maxsize, ttl=ttl)
+        self.users: TTLCache = TTLCache(maxsize=maxsize, ttl=ttl)
 
     def set_chat_settings(self, chat_id: int, **kwargs):
         if self.chats_settings.get(chat_id, None) is None:
@@ -24,5 +24,5 @@ class Cache:
     def set_user(self, user_id: int, chat_id: int):
         self.users["user_id"] = chat_id
 
-    def user_exist(self, user_id: int):
+    def user_exists(self, user_id: int):
         return self.users.get("user_id", None) is not None

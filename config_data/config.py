@@ -1,5 +1,5 @@
 from dotenv import find_dotenv, load_dotenv
-from pydantic import Field, PostgresDsn
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 env_path = find_dotenv()
@@ -7,7 +7,15 @@ load_dotenv(env_path)
 
 
 class DatabaseConfig(BaseSettings):
-    dsn: PostgresDsn = Field("", alias="DSN")
+    host: str = Field(..., alias="DB_HOST")
+    port: int = Field(..., alias="DB_PORT")
+    user: str = Field(..., alias="DB_USER")
+    password: str = Field(..., alias="DB_PASSWORD")
+    name: str = Field(..., alias="DB_NAME")
+
+    @property
+    def dsn(self) -> str:
+        return f"postgresql+asyncpg://{self.user}:{self.password}" f"@{self.host}:{self.port}/{self.name}"
 
 
 class StorageConfig(BaseSettings):
