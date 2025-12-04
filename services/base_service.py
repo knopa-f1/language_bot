@@ -1,66 +1,48 @@
-from fluentogram import TranslatorRunner
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from cache.cache import Cache
-from config_data.constants import DefaultSettings
-
-
-class Context:
-    def __init__(
-        self,
-        session: AsyncSession,
-        cache: Cache | None = None,
-        i18n: TranslatorRunner | None = None,
-        default_settings: DefaultSettings | None = None,
-        lang: str = "",
-    ):
-        self.session = session
-        self.cache = cache
-        self.i18n = i18n
-        self.default_settings = default_settings
-        self.lang = lang
+from services.context.global_context import GlobalContext
+from services.context.request_context import RequestContext
 
 
 class BaseService:
-    def __init__(self, context: Context):
-        self.context = context
+    def __init__(self, global_context: GlobalContext, request_context: RequestContext):
+        self.global_context = global_context
+        self.request_context = request_context
 
     @property
     def session(self):
-        return self.context.session
+        return self.request_context.session
 
     @session.setter
     def session(self, session):
-        self.context.session = session
+        self.request_context.session = session
 
     @property
     def cache(self):
-        return self.context.cache
+        return self.global_context.cache
 
     @cache.setter
     def cache(self, cache):
-        self.context.cache = cache
+        self.global_context.cache = cache
 
     @property
     def i18n(self):
-        return self.context.i18n
+        return self.request_context.i18n
 
     @i18n.setter
     def i18n(self, i18n):
-        self.context.i18n = i18n
+        self.request_context.i18n = i18n
 
     @property
     def lang(self):
-        return self.context.lang
+        return self.request_context.lang
 
     @lang.setter
     def lang(self, lang):
-        self.context.lang = lang
+        self.request_context.lang = lang
 
     @property
     def default_settings(self):
-        return self.context.default_settings
+        return self.global_context.default_settings
 
     @default_settings.setter
     def default_settings(self, default_settings):
-        self.context.default_settings = default_settings
+        self.global_context.default_settings = default_settings

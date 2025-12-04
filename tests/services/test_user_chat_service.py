@@ -21,12 +21,12 @@ class TestUserChatService:
         return repo
 
     @pytest.fixture
-    def service(self, context, chats_repo, users_repo):
-        return UserChatService(context, chats_repo, users_repo)
+    def service(self, global_context, request_context, chats_repo, users_repo):
+        return UserChatService(global_context, request_context, chats_repo, users_repo)
 
     @pytest.mark.asyncio
     async def test_user_exists_cache_true(self, service):
-        service.cache.user_exists = Mock(return_value=True)
+        service.cache.user_exists = AsyncMock(return_value=True)
 
         result = await service.user_exists(10, 20)
 
@@ -35,12 +35,12 @@ class TestUserChatService:
 
     @pytest.mark.asyncio
     async def test_user_exists_from_repo(self, service, users_repo):
-        service.cache.user_exists = Mock(return_value=False)
+        service.cache.user_exists = AsyncMock(return_value=False)
 
         # users_repo.get_user returns user object
         user_obj = Mock()
         users_repo.get_user.return_value = user_obj
-        service.cache.set_user = Mock()
+        service.cache.set_user = AsyncMock()
 
         result = await service.user_exists(10, 20)
 
@@ -50,7 +50,7 @@ class TestUserChatService:
 
     @pytest.mark.asyncio
     async def test_user_exists_not_found(self, service, users_repo):
-        service.cache.user_exists = Mock(return_value=False)
+        service.cache.user_exists = AsyncMock(return_value=False)
         users_repo.get_user.return_value = None
 
         result = await service.user_exists(10, 20)
@@ -60,7 +60,7 @@ class TestUserChatService:
     @pytest.mark.asyncio
     async def test_set_user(self, service, users_repo):
         user = Mock(id=5)
-        service.cache.set_user = Mock()
+        service.cache.set_user = AsyncMock()
 
         # get_user_info returns some dict
         import services.user_chat_service as module

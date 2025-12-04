@@ -33,19 +33,21 @@ class TestWordManagementService:
         return svc
 
     @pytest.fixture
-    def service(self, context, user_chat_service, words_repo, stats_repo):
+    def service(self, global_context, request_context, user_chat_service, words_repo, stats_repo):
         return WordManagementService(
-            context=context,
+            global_context=global_context,
+            request_context=request_context,
             user_chat_service=user_chat_service,
             words_repo=words_repo,
             stats_repo=stats_repo,
         )
 
-    def test_letters_state(self, service, cache):
-        service._letters_set_state(1, {"x": 1})
+    @pytest.mark.asyncio
+    async def test_letters_state(self, service, cache):
+        await service._letters_set_state(1, {"x": 1})
         cache.set_chat_settings.assert_called_with(1, letters_state={"x": 1})
 
-        service._letters_clear_state(1)
+        await service._letters_clear_state(1)
         cache.set_chat_settings.assert_called_with(1, letters_state=None)
 
     def test_shuffle_letters_with_positions(self, service):

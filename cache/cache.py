@@ -1,28 +1,29 @@
 import logging
 
-from cachetools import TTLCache
+from cache.memory_cache import MemoryCache
+from cache.redis_cache import RedisCache
+
+from config_data.config import ConfigSettings
+
 
 logger = logging.getLogger(__name__)
 
 
-class Cache:
-    def __init__(self, maxsize=1000, ttl: int = 3600):
-        self.chats_settings: TTLCache = TTLCache(maxsize=maxsize, ttl=ttl)
-        self.users: TTLCache = TTLCache(maxsize=maxsize, ttl=ttl)
+async def create_cache(config: ConfigSettings):
+    logger.info(f"Initializing cache, config: host={config.redis.host}, port={config.redis.port}")
 
-    def set_chat_settings(self, chat_id: int, **kwargs):
-        if self.chats_settings.get(chat_id, None) is None:
-            self.chats_settings[chat_id] = {}
-        for key, value in kwargs.items():
-            self.chats_settings[chat_id][key] = value
+    try:
+        cache = RedisCache(
+            host=config.redis.host,
+            port=config.redis.port,
+            db=config.redis.db,
+            password=config.redis.password,
+            ttl=config.redis.ttl,
+        )
+        await cache.redis.ping()
+        logger.info("RedisCache initialized successfully")
+        return cache
 
-    def get_chat_settings(self, chat_id: int, key: str):
-        if self.chats_settings.get(chat_id, None) is None:
-            return None
-        return self.chats_settings[chat_id].get(key, None)
-
-    def set_user(self, user_id: int, chat_id: int):
-        self.users["user_id"] = chat_id
-
-    def user_exists(self, user_id: int):
-        return self.users.get("user_id", None) is not None
+    except Exception as e:
+        logger.error(f"Redis unavailable, switching to MemoryCache: {e}")
+        return MemoryCache()

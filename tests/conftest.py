@@ -4,12 +4,13 @@ from unittest.mock import Mock
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from config_data.constants import DefaultSettings
+from services.context.global_context import GlobalContext
+from services.context.request_context import RequestContext
 from db import Base
 from db.repositories.chats import ChatsRepository
 from db.repositories.statistics import StatisticsRepository
 from db.repositories.users import UsersRepository
 from db.repositories.words import WordsRepository
-from services.base_service import Context
 from utils.i18n import create_translator_hub
 
 
@@ -19,17 +20,20 @@ def cache():
 
 
 @pytest.fixture
-def context(cache):
+def global_context(cache):
     hub = create_translator_hub()
     lang = "ru"
     i18n = hub.get_translator_by_locale(locale=lang)
-    return Context(
-        session="dummy_session",
-        cache=cache,
-        i18n=i18n,
-        default_settings=DefaultSettings(),
-        lang=lang,
+    return GlobalContext(
+        config=None, cache=cache, translator_hub=hub, default_settings=DefaultSettings(), session_pool=None
     )
+
+
+@pytest.fixture
+def request_context(global_context, session):
+    lang = "ru"
+    i18n = global_context.translator_hub.get_translator_by_locale(locale=lang)
+    return RequestContext(session=session, i18n=i18n, lang=lang)
 
 
 @pytest.fixture(scope="session")

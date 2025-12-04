@@ -4,6 +4,8 @@ from typing import Type
 from aiogram.types import Chat as TChat
 from aiogram.types import InlineKeyboardMarkup
 
+from services.context.global_context import GlobalContext
+from services.context.request_context import RequestContext
 from db import Word
 from db.models import Status
 from db.repositories.statistics import StatisticsRepository
@@ -14,20 +16,27 @@ from services.statistics_service import StatisticsService
 
 
 class WordManagementService(BaseService):
-    def __init__(self, context, user_chat_service, words_repo: WordsRepository, stats_repo: StatisticsRepository):
-        super().__init__(context)
+    def __init__(
+        self,
+        global_context: GlobalContext,
+        request_context: RequestContext,
+        user_chat_service,
+        words_repo: WordsRepository,
+        stats_repo: StatisticsRepository,
+    ):
+        super().__init__(global_context, request_context)
         self.user_chat_service = user_chat_service
         self.words_repo = words_repo
         self.stats_repo = stats_repo
 
-    def _letters_get_state(self, chat_id):
-        return self.cache.get_chat_settings(chat_id, "letters_state")
+    async def _letters_get_state(self, chat_id):
+        return await self.cache.get_chat_settings(chat_id, "letters_state")
 
-    def _letters_set_state(self, chat_id, state):
-        self.cache.set_chat_settings(chat_id, letters_state=state)
+    async def _letters_set_state(self, chat_id, state):
+        await self.cache.set_chat_settings(chat_id, letters_state=state)
 
-    def _letters_clear_state(self, chat_id):
-        self.cache.set_chat_settings(chat_id, letters_state=None)
+    async def _letters_clear_state(self, chat_id):
+        await self.cache.set_chat_settings(chat_id, letters_state=None)
 
     @staticmethod
     def _shuffle_letters_with_positions(phrase):
@@ -62,8 +71,8 @@ class WordManagementService(BaseService):
         max_len = self.default_settings.answer_set.max_letter_len
         return await self.words_repo.exists_short_word(chat_id, max_len)
 
-    def init_letters_state(self, chat_id, word_id, target, letters):
-        self._letters_set_state(
+    async def init_letters_state(self, chat_id, word_id, target, letters):
+        await self._letters_set_state(
             chat_id,
             {
                 "word_id": word_id,
@@ -171,7 +180,7 @@ class WordManagementService(BaseService):
 
             letters = self._shuffle_letters_with_positions(correct_word.word)
             target = correct_word.word.lower().strip()
-            self.init_letters_state(chat_id, correct_word.word_id, target, letters)
+            await self.init_letters_state(chat_id, correct_word.word_id, target, letters)
             keyboard = Keyboards.letters_keyboard(self.i18n, correct_word.word_id, letters)
 
         return {"message_text": message_text, "keyboard": keyboard}
@@ -214,7 +223,7 @@ class WordManagementService(BaseService):
         word_ob = await self.get_word_by_id(word_id)
         translation = getattr(word_ob, f"translation_{self.lang}")
 
-        state = self._letters_get_state(chat_id)
+        state = await self._letters_get_state(chat_id)
         if not state or state["word_id"] != word_id:
             return (
                 self.i18n.error.no.current.word(),
@@ -238,11 +247,11 @@ class WordManagementService(BaseService):
             if pos < len(target):
                 text = self._build_letter_step_text(True, translation, progress)
                 kb = Keyboards.letters_keyboard(self.i18n, word_id, [l for l in letters if l[0] >= pos])
-                self._letters_set_state(chat_id, state)
+                await self._letters_set_state(chat_id, state)
                 return text, kb
 
             # Completed
-            self._letters_clear_state(chat_id)
+            await self._letters_clear_state(chat_id)
             button_word.correct = True
             text = await self.process_word(button_word, statistics_service)
             kb = Keyboards.answer_word_keyboard(self.i18n, button_word)
@@ -257,11 +266,11 @@ class WordManagementService(BaseService):
         if wrong < letter_attempts:
             text = self._build_letter_step_text(False, translation, progress)
             kb = Keyboards.letters_keyboard(self.i18n, word_id, [l for l in letters if l[0] >= pos])
-            self._letters_set_state(chat_id, state)
+            await self._letters_set_state(chat_id, state)
             return text, kb
 
         # Fail (N mistakes)
-        self._letters_clear_state(chat_id)
+        await self._letters_clear_state(chat_id)
         button_word.correct = False
         text = await self.process_word(button_word, statistics_service)
         kb = Keyboards.answer_word_keyboard(self.i18n, button_word)

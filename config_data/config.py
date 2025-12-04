@@ -18,10 +18,16 @@ class DatabaseConfig(BaseSettings):
         return f"postgresql+asyncpg://{self.user}:{self.password}" f"@{self.host}:{self.port}/{self.name}"
 
 
-class StorageConfig(BaseSettings):
-    redis_host: str = Field("", alias="REDIS_HOST")
-    redis_port: str = Field("", alias="REDIS_PORT")
-    redis_password: str = Field("", alias="REDIS_PASSWORD")
+class RedisConfig(BaseSettings):
+    host: str = Field("localhost", alias="REDIS_HOST")
+    port: int = Field(6379, alias="REDIS_PORT")
+    db: int = Field(0, alias="REDIS_DB")
+    password: str | None = Field(None, alias="REDIS_PASSWORD")
+    ttl: int = Field(3600, alias="REDIS_TTL")
+
+    @property
+    def url(self) -> str:
+        return f"redis://{self.host}:{self.port}/{self.db}"
 
 
 class TgBot(BaseSettings):
@@ -32,7 +38,7 @@ class ConfigSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
     tg_bot: TgBot = TgBot()
     db: DatabaseConfig = DatabaseConfig()
-    redis: StorageConfig = StorageConfig()
+    redis: RedisConfig = RedisConfig()
     env_type: str = Field("test", env="ENV_TYPE")
     timezone: int = Field(0, env="TIMEZONE")
     is_docker: bool = Field(False, env="IN_DOCKER")

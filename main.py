@@ -7,10 +7,11 @@ from aiogram import Bot, Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from cache.cache import Cache
+from cache.cache import create_cache
 from config_data.config import ConfigSettings
 from config_data.constants import DefaultSettings
 from config_data.logging_config import setup_logging
+from services.context.global_context import GlobalContext
 from handlers import chat_status_handlers, other_handlers, user_handlers
 from keyboards.set_menu import set_main_menu
 from middlewares.chat_event import ChatEventsMiddleware
@@ -18,6 +19,7 @@ from middlewares.i18n import TranslatorRunnerMiddleware
 from middlewares.session import DbSessionMiddleware
 from middlewares.users import TrackAllUsersMiddleware
 from services.schedule_tasks import job_send_messages_to_users
+from services.service_factory import ServiceFactory
 from utils.i18n import create_translator_hub
 
 
@@ -43,8 +45,16 @@ async def main():
 
     # workflow_data
     default_settings = DefaultSettings()
-    dp["default_settings"] = default_settings
-    dp["cache"] = Cache()
+    cache = await create_cache(config)
+    global_context = GlobalContext(
+        config=config,
+        session_pool=session_maker,
+        cache=cache,
+        default_settings=DefaultSettings(),
+        translator_hub=translator_hub,
+    )
+    dp["global_context"] = global_context
+    dp["service_factory"] = ServiceFactory(global_context)
 
     # set Menu
     await set_main_menu(bot, translator_hub.get_translator_by_locale(default_settings.chat_set.lang))
@@ -55,7 +65,7 @@ async def main():
     dp.include_router(other_handlers.router)
 
     # registration middleware
-    dp.update.outer_middleware(DbSessionMiddleware(session_maker))
+    dp.update.outer_middleware(DbSessionMiddleware())
     dp.update.middleware(TranslatorRunnerMiddleware())
     dp.update.middleware(TrackAllUsersMiddleware())
     dp.update.middleware(ChatEventsMiddleware())

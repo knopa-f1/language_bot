@@ -8,48 +8,46 @@ from services.word_management_service import WordManagementService
 
 
 class ServiceFactory:
-    def __init__(self, context):
-        self.context = context
-        self._user_chat_service = None
-        self._word_management_service = None
-        self._statistics_service = None
+    def __init__(self, global_context):
+        self.global_context = global_context
 
-    def _create_chats_repo(self) -> ChatsRepository:
-        return ChatsRepository(self.context.session)
+    @staticmethod
+    def _create_chats_repo(session) -> ChatsRepository:
+        return ChatsRepository(session)
 
-    def _create_users_repo(self) -> UsersRepository:
-        return UsersRepository(self.context.session)
+    @staticmethod
+    def _create_users_repo(session) -> UsersRepository:
+        return UsersRepository(session)
 
-    def _create_words_repo(self) -> WordsRepository:
-        return WordsRepository(self.context.session)
+    @staticmethod
+    def _create_words_repo(session) -> WordsRepository:
+        return WordsRepository(session)
 
-    def _create_statistics_repo(self) -> StatisticsRepository:
-        return StatisticsRepository(self.context.session)
+    @staticmethod
+    def _create_statistics_repo(session) -> StatisticsRepository:
+        return StatisticsRepository(session)
 
-    def create_user_chat_service(self) -> UserChatService:
-        if not self._user_chat_service:
-            self._user_chat_service = UserChatService(
-                context=self.context,
-                chats_repo=self._create_chats_repo(),
-                users_repo=self._create_users_repo(),
-            )
-        return self._user_chat_service
+    def create_user_chat_service(self, request_context) -> UserChatService:
+        return UserChatService(
+            global_context=self.global_context,
+            request_context=request_context,
+            chats_repo=self._create_chats_repo(request_context.session),
+            users_repo=self._create_users_repo(request_context.session),
+        )
 
-    def create_word_management_service(self) -> WordManagementService:
-        if not self._word_management_service:
-            self._word_management_service = WordManagementService(
-                context=self.context,
-                user_chat_service=self.create_user_chat_service(),
-                words_repo=self._create_words_repo(),
-                stats_repo=self._create_statistics_repo(),
-            )
-        return self._word_management_service
+    def create_word_management_service(self, request_context) -> WordManagementService:
+        return WordManagementService(
+            global_context=self.global_context,
+            request_context=request_context,
+            user_chat_service=self.create_user_chat_service(request_context),
+            words_repo=self._create_words_repo(request_context.session),
+            stats_repo=self._create_statistics_repo(request_context.session),
+        )
 
-    def create_statistics_service(self) -> StatisticsService:
-        if not self._statistics_service:
-            self._statistics_service = StatisticsService(
-                context=self.context,
-                word_management_service=self.create_word_management_service(),
-                stats_repo=self._create_statistics_repo(),
-            )
-        return self._statistics_service
+    def create_statistics_service(self, request_context) -> StatisticsService:
+        return StatisticsService(
+            global_context=self.global_context,
+            request_context=request_context,
+            word_management_service=self.create_word_management_service(request_context),
+            stats_repo=self._create_statistics_repo(request_context.session),
+        )

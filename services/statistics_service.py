@@ -1,12 +1,20 @@
 import datetime
 
+from services.context.global_context import GlobalContext
+from services.context.request_context import RequestContext
 from db.repositories.statistics import StatisticsRepository
 from services.base_service import BaseService
 
 
 class StatisticsService(BaseService):
-    def __init__(self, context, word_management_service, stats_repo: StatisticsRepository):
-        super().__init__(context)
+    def __init__(
+        self,
+        global_context: GlobalContext,
+        request_context: RequestContext,
+        word_management_service,
+        stats_repo: StatisticsRepository,
+    ):
+        super().__init__(global_context, request_context)
         self.word_management_service = word_management_service
         self.repo = stats_repo
 
