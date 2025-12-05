@@ -91,7 +91,7 @@ class TestUserChatService:
 
     @pytest.mark.asyncio
     async def test_get_chat_settings_from_cache(self, service):
-        service.cache.get_chat_settings = Mock(return_value="ru")
+        service.cache.get_chat_settings = AsyncMock(return_value="ru")
 
         result = await service.get_chat_settings(10, "lang")
 
@@ -100,8 +100,8 @@ class TestUserChatService:
 
     @pytest.mark.asyncio
     async def test_get_chat_settings_from_repo(self, service, chats_repo):
-        service.cache.get_chat_settings = Mock(return_value=None)
-        service.cache.set_chat_settings = Mock()
+        service.cache.get_chat_settings = AsyncMock(return_value=None)
+        service.cache.set_chat_settings = AsyncMock()
 
         chat = Mock(lang="en")
         chats_repo.get_chat.return_value = chat
@@ -114,7 +114,7 @@ class TestUserChatService:
 
     @pytest.mark.asyncio
     async def test_get_chat_settings_no_chat(self, service, chats_repo):
-        service.cache.get_chat_settings = Mock(return_value=None)
+        service.cache.get_chat_settings = AsyncMock(return_value=None)
         chats_repo.get_chat.return_value = None
 
         result = await service.get_chat_settings(10, "lang")
@@ -124,7 +124,7 @@ class TestUserChatService:
     @pytest.mark.asyncio
     async def test_set_chat_settings(self, service, chats_repo):
         chat = Mock(id=7)
-        service.cache.set_chat_settings = Mock()
+        service.cache.set_chat_settings = AsyncMock()
 
         # get_chat_info returns dict
         import services.user_chat_service as module

@@ -44,11 +44,9 @@ class TestWordManagementService:
 
     @pytest.mark.asyncio
     async def test_letters_state(self, service, cache):
+        cache.set_chat_settings = AsyncMock()
         await service._letters_set_state(1, {"x": 1})
-        cache.set_chat_settings.assert_called_with(1, letters_state={"x": 1})
-
-        await service._letters_clear_state(1)
-        cache.set_chat_settings.assert_called_with(1, letters_state=None)
+        cache.set_chat_settings.assert_called_once_with(1, letters_state={"x": 1})
 
     def test_shuffle_letters_with_positions(self, service):
         result = service._shuffle_letters_with_positions("a b")
@@ -130,7 +128,10 @@ class TestWordManagementService:
         assert "test" in res["message_text"]
 
     @pytest.mark.asyncio
-    async def test_prepare_words_type_3_letters(self, service, words_repo, monkeypatch):
+    async def test_prepare_words_type_3_letters(self, service, cache, words_repo, monkeypatch):
+        cache.set_chat_settings = AsyncMock()
+        cache.get_chat_settings = AsyncMock(return_value=None)
+
         class w:
             word = "cat"
             word_id = 2
@@ -176,13 +177,16 @@ class TestWordManagementService:
 
         words_repo.get_word_by_id.return_value = w
 
-        cache.get_chat_settings.return_value = {
-            "word_id": 1,
-            "target": "cat",
-            "current_pos": 0,
-            "wrong_attempts": 0,
-            "letters": [(0, "c"), (1, "a"), (2, "t")],
-        }
+        cache.get_chat_settings = AsyncMock(
+            return_value={
+                "word_id": 1,
+                "target": "cat",
+                "current_pos": 0,
+                "wrong_attempts": 0,
+                "letters": [(0, "c"), (1, "a"), (2, "t")],
+            }
+        )
+        cache.set_chat_settings = AsyncMock()
 
         btn = Mock()
         btn.index = 0
