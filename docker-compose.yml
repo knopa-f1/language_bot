@@ -1,6 +1,6 @@
 services:
   db:
-    container_name: bot_db
+    container_name: bot_db_${ENV_TYPE}
     image: postgres:17
     restart: unless-stopped
     environment:
@@ -18,10 +18,11 @@ services:
       retries: 10
 
   bot:
-    container_name: bot_app
+    container_name: bot_app_${ENV_TYPE}
     build: .
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - ${ENV_FILE}
     depends_on:
       db:
         condition: service_healthy
@@ -32,7 +33,7 @@ services:
       "
   redis:
     image: redis:7
-    container_name: bot_redis
+    container_name: bot_redis_${ENV_TYPE}
     restart: always
     ports:
       - "7379:7379"
