@@ -1,0 +1,36 @@
+name: Deploy Production Bot
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+
+jobs:
+  deploy-prod:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t telegram-bot-prod .
+
+      - name: Run tests
+        run: |
+          if [ -d "tests" ]; then
+            docker run --rm telegram-bot-prod pytest -q
+          else
+            echo "No tests folder found, skipping tests"
+          fi
+
+      - name: Stop old production containers
+        run: |
+          ENV_FILE=/opt/bot-envs/.env.prod \
+          docker compose --env-file /opt/bot-envs/.env.prod down || true
+
+      - name: Deploy production bot
+        run: |
+          ENV_FILE=/opt/bot-envs/.env.prod \
+          docker compose --env-file /opt/bot-envs/.env.prod up -d --build
