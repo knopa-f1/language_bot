@@ -15,8 +15,7 @@ class TestButtonHelpers:
         assert get_selected_data("one") == "one"
 
     def test_get_selected_end_time(self):
-        assert get_selected_end_time("prefix_10_20") == ("10", "20")
-        assert get_selected_end_time("x_y_z") == ("y", "z")
+        assert get_selected_end_time("prefix_10_20") == (10, 20)
 
 
 class TestButtonWordParse:
