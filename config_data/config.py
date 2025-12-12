@@ -43,6 +43,7 @@ class ConfigSettings(BaseSettings):
     tg_bot: TgBot = TgBot()
     db: DatabaseConfig = DatabaseConfig()
     redis: RedisConfig = RedisConfig()
+    sentry_dsn: str = Field("", env="SENTRY_DSN")
     env_type: str = Field("test", env="ENV_TYPE")
     timezone: int = Field(0, env="TIMEZONE")
     is_docker: bool = Field(False, env="IN_DOCKER")

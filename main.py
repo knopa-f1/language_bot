@@ -7,6 +7,10 @@ from aiogram import Bot, Dispatcher
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+
 from cache.cache import create_cache
 from config_data.config import ConfigSettings
 from config_data.constants import DefaultSettings
@@ -27,6 +31,20 @@ from utils.i18n import create_translator_hub
 async def main():
     # load config
     config = ConfigSettings()
+
+    # --- Sentry ---
+    sentry_dsn = config.sentry_dsn
+    if sentry_dsn:
+        sentry_logging = LoggingIntegration(
+            level=logging.INFO,
+            event_level=logging.ERROR,
+        )
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            integrations=[sentry_logging, AsyncioIntegration()],
+            traces_sample_rate=0.0,
+            environment=config.env_type,
+        )
 
     # logging
     setup_logging(config.env_type, config.is_docker)
