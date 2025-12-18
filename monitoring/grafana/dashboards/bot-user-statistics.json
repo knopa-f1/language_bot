@@ -1,0 +1,111 @@
+{
+  "uid": "telegram-bot-user-statistics",
+  "title": "Telegram Bot User Statistics",
+  "tags": ["bot", "statistics"],
+  "timezone": "browser",
+  "schemaVersion": 37,
+  "version": 2,
+  "refresh": "1m",
+
+  "templating": {
+    "list": [
+      {
+        "name": "env",
+        "type": "datasource",
+        "label": "Environment",
+        "query": "postgres",
+        "current": {
+          "text": "Postgres Test",
+          "value": "postgres_test"
+        }
+      }
+    ]
+  },
+
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Events per day",
+      "datasource": "$env",
+      "timeFrom": "7d",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT date::timestamp AS time, SUM(event_count) AS events FROM chats_event_statistics GROUP BY date ORDER BY date"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "DAU (Daily Active Users)",
+      "datasource": "$env",
+      "timeFrom": "60d",
+      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT date::timestamp AS time, COUNT(DISTINCT chat_id) AS value FROM chats_event_statistics GROUP BY date ORDER BY date"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "WAU (Weekly Active Users)",
+      "datasource": "$env",
+      "timeFrom": "180d",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT date_trunc('week', date)::timestamp AS time, COUNT(DISTINCT chat_id) AS value FROM chats_event_statistics GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "MAU (Monthly Active Users)",
+      "datasource": "$env",
+      "timeFrom": "365d",
+      "gridPos": { "x": 0, "y": 24, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT date_trunc('month', date)::timestamp AS time, COUNT(DISTINCT chat_id) AS value FROM chats_event_statistics GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Retention (D1)",
+      "datasource": "$env",
+      "gridPos": { "x": 0, "y": 17, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT a.date::timestamp AS time, COUNT(DISTINCT a.chat_id)::float / NULLIF(COUNT(DISTINCT b.chat_id), 0) * 100 AS retention FROM chats_event_statistics a JOIN chats_event_statistics b ON a.chat_id = b.chat_id AND b.date = a.date - INTERVAL '1 day' GROUP BY a.date ORDER BY a.date"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    }
+  ]
+}

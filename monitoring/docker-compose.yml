@@ -27,10 +27,15 @@ services:
     container_name: grafana
     ports:
       - "3000:3000"
+    networks:
+      - data_net
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
@@ -41,3 +46,8 @@ services:
 volumes:
   loki-data:
   grafana-data:
+
+networks:
+  data_net:
+    external: true
+    name: bot_data_net

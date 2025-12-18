@@ -53,3 +53,4 @@ aiosqlite
 asyncpg
 redis>=5.0.0
 sentry-sdk
+celery

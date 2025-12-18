@@ -9,3 +9,29 @@ datasources:
     isDefault: true
     version: 1
     editable: false
+
+  - name: Postgres Prod
+    uid: postgres_prod
+    type: postgres
+    access: proxy
+    isDefault: false
+    url: bot_db_prod:${DB_PORT}
+    database: language_bot_prod
+    user: ${DB_USER}
+    secureJsonData:
+      password: ${DB_PASSWORD}
+    jsonData:
+      sslmode: disable
+
+  - name: Postgres Test
+    uid: postgres_test
+    type: postgres
+    access: proxy
+    isDefault: false
+    url: bot_db_test:${DB_PORT}
+    database: language_bot_test
+    user: ${DB_USER}
+    secureJsonData:
+      password: ${DB_PASSWORD}
+    jsonData:
+      sslmode: disable

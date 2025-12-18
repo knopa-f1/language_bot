@@ -7,6 +7,8 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+    networks:
+      - data_net
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -26,6 +28,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - data_net
     command: >
       sh -c "
         alembic upgrade head &&
@@ -36,7 +40,12 @@ services:
     container_name: bot_redis_${ENV_TYPE}
     restart: always
     ports:
-      - "7379:7379"
+      - "6379:6379"
 
 volumes:
   pgdata:
+    name: pgdata_${ENV_TYPE}
+
+networks:
+  data_net:
+    name: bot_data_net
