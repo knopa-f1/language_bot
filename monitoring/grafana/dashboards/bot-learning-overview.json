@@ -84,7 +84,7 @@
           "refId": "A",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT s.chat_id, ci.username, COUNT(*) AS learned_words FROM chats_statistics s LEFT JOIN chats_info ci ON ci.chat_id = s.chat_id WHERE s.status = 'learned' GROUP BY s.chat_id, ci.username ORDER BY learned_words DESC LIMIT 10"
+          "rawSql": "SELECT s.chat_id, ci.username, COUNT(*) AS learned_words FROM chats_statistics s LEFT JOIN chats_info ci ON ci.chat_id = s.chat_id WHERE s.status IN ('learned','already_know') GROUP BY s.chat_id, ci.username ORDER BY learned_words DESC LIMIT 10"
         }
       ],
       "options": {
@@ -104,7 +104,7 @@
           "refId": "A",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT status_date::date::timestamp AS time, COUNT(*) AS value FROM chats_statistics WHERE status = 'learned' GROUP BY 1 ORDER BY 1"
+          "rawSql": "SELECT status_date::date::timestamp AS time, COUNT(*) AS value FROM chats_statistics WHERE status IN ('learned','already_know') GROUP BY 1 ORDER BY 1"
         }
       ],
       "fieldConfig": { "defaults": {}, "overrides": [] }
@@ -168,7 +168,7 @@
           "refId": "A",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT word_id, COUNT(*) AS count FROM chats_statistics WHERE status = 'never_learn' GROUP BY word_id ORDER BY count DESC LIMIT 10"
+          "rawSql": "SELECT s.word_id AS word_id, w.word AS word, COUNT(*) AS count FROM chats_statistics s LEFT JOIN words w ON w.word_id = s.word_id WHERE s.status = 'never_learn' GROUP BY s.word_id, w.word ORDER BY count DESC LIMIT 10"
         }
       ],
       "fieldConfig": { "defaults": {}, "overrides": [] },
