@@ -9,6 +9,8 @@ services:
       - ./loki-config.yml:/etc/loki/local-config.yaml
       - loki-data:/loki
     restart: unless-stopped
+    networks:
+      - data_net
 
   promtail:
     image: grafana/promtail:2.9.0
@@ -21,6 +23,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./promtail-config.yml:/etc/promtail/config.yml
     restart: unless-stopped
+    networks:
+      - data_net
 
   grafana:
     image: grafana/grafana:11.0.0
