@@ -23,20 +23,28 @@ Try it yourself: [@SpeakLithuanianBot](https://t.me/SpeakLithuanianBot).
 
 ## Setup Instructions
 
-1. **Obtain a Telegram Bot Token:**
+1. Obtain a Telegram Bot Token:
    Request your token from [@BotFather](https://t.me/BotFather).
 
-2. **Set Up the Database:**
+2. Set Up the Database:
    Use a database like PostgreSQL for optimal performance.
 
-3. **Configure Environment Variables:**
+3. Configure Environment Variables:
    Edit the `.env` file to include your bot token and database connection details.
 
-4. **Install Dependencies:**
-   Run `pip install -r requirements.txt` to install all required libraries.
+4. Install Poetry:
+   - macOS/Linux: `curl -sSL https://install.python-poetry.org | python3 -`
+   - Windows (PowerShell): `(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -`
+   - Ensure Poetry is on your PATH (restart shell if needed): `poetry --version`
 
-5. **Start the Bot:**
-   Launch the bot by running `main.py` as a service.
+5. Install Dependencies with Poetry:
+   - From the project root: `poetry install`
+   - This sets up the environment and installs all project dependencies.
+
+6. Run the Bot Locally with Poetry:
+   - Activate the Poetry environment: `poetry shell`
+   - Apply migrations (if needed): `alembic upgrade head`
+   - Start the bot: `python main.py`
 
 ---
 
