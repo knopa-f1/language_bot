@@ -13,8 +13,9 @@ RUN pip install --no-cache-dir poetry
 # Copy dependency manifests first for efficient Docker layer caching
 COPY pyproject.toml poetry.lock* ./
 
-# Install only runtime (main) dependencies into the image environment
-RUN poetry install --no-interaction --no-ansi --only main --no-root
+# Install both runtime and dev dependencies into the image environment
+# Dev deps include pytest to allow `docker run <image> pytest -q`
+RUN poetry install --no-interaction --no-ansi --with dev --no-root
 
 # Copy the rest of the project files
 COPY . .
