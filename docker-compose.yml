@@ -37,6 +37,8 @@ services:
     image: redis:7
     container_name: bot_redis_${ENV_TYPE}
     restart: always
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
 
 volumes:
   pgdata:
