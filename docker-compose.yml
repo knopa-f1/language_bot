@@ -36,9 +36,12 @@ services:
   redis:
     image: redis:7
     container_name: bot_redis_${ENV_TYPE}
-    restart: always
+    restart: unless-stopped
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
+    networks:
+        - data_net
 
 volumes:
   pgdata:
