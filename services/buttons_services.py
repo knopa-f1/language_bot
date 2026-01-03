@@ -15,7 +15,7 @@ def get_selected_data(data: str) -> str:
 
 def get_selected_end_time(data: str) -> tuple:
     data_lst = data.split("_")
-    return data_lst[-2], data_lst[-1]
+    return int(data_lst[-2]), int(data_lst[-1])
 
 
 class ButtonWord:

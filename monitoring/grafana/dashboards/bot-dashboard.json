@@ -1,0 +1,67 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Loki",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{container_name=~\"/bot_app(_.*)?\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "All Bot Logs",
+      "type": "logs"
+    },
+    {
+      "datasource": "Loki",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 10 },
+      "id": 2,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "expr": "{container_name=~\"/bot_app(_.*)?\"} |= \"ERROR\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Bot Errors",
+      "type": "logs"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": ["bot", "logs"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "timezone": "",
+  "title": "Telegram Bot Logs",
+  "version": 1
+}

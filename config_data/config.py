@@ -1,9 +1,13 @@
+import os
+
 from dotenv import find_dotenv, load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 env_path = find_dotenv()
 load_dotenv(env_path)
+
+env_file = ".env" if os.getenv("IN_DOCKER") != 1 else None
 
 
 class DatabaseConfig(BaseSettings):
@@ -35,10 +39,11 @@ class TgBot(BaseSettings):
 
 
 class ConfigSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=env_file, env_file_encoding="utf-8", extra="ignore")
     tg_bot: TgBot = TgBot()
     db: DatabaseConfig = DatabaseConfig()
     redis: RedisConfig = RedisConfig()
+    sentry_dsn: str = Field("", env="SENTRY_DSN")
     env_type: str = Field("test", env="ENV_TYPE")
     timezone: int = Field(0, env="TIMEZONE")
     is_docker: bool = Field(False, env="IN_DOCKER")

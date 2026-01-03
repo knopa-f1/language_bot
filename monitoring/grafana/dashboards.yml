@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: bot-logs
+    folder: Bot Monitoring
+    type: file
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

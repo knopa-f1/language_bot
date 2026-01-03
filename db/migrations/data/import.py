@@ -1,6 +1,8 @@
+import asyncio
 import json
 
-from sqlalchemy import MetaData, Table, create_engine
+from sqlalchemy import MetaData, insert
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from config_data.config import ConfigSettings
 
@@ -8,21 +10,24 @@ TABLE_NAME = "words"
 EXPORT_FILE = "table_data.json"
 
 
-def import_table():
+async def import_table_async():
     config = ConfigSettings()
-    engine = create_engine(str(config.db.dsn))
+    engine = create_async_engine(str(config.db.dsn))
+
     metadata = MetaData()
-    metadata.reflect(engine, only=[TABLE_NAME])
-    table = Table(TABLE_NAME, metadata, autoload_with=engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(metadata.reflect, only=[TABLE_NAME])
+
+    table = metadata.tables[TABLE_NAME]
 
     with open(EXPORT_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    with engine.begin() as conn:
-        conn.execute(table.insert(), data)
+    async with engine.begin() as conn:
+        await conn.execute(insert(table), data)
 
     print(f"Данные из {EXPORT_FILE} импортированы в {TABLE_NAME}")
 
 
 if __name__ == "__main__":
-    import_table()
+    asyncio.run(import_table_async())

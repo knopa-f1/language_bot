@@ -1,0 +1,36 @@
+name: Deploy Test Bot
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - develop
+
+jobs:
+  deploy-test:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t telegram-bot-test .
+
+      - name: Run tests
+        run: |
+          if [ -d "tests" ]; then
+            docker run --rm telegram-bot-test pytest -q
+          else
+            echo "No tests folder found, skipping tests"
+          fi
+
+      - name: Stop old containers
+        run: |
+          ENV_FILE=/opt/bot-envs/.env.test \
+          docker compose --env-file /opt/bot-envs/.env.test down || true
+
+      - name: Deploy test bot
+        run: |
+          ENV_FILE=/opt/bot-envs/.env.test \
+          docker compose --env-file /opt/bot-envs/.env.test up -d --build

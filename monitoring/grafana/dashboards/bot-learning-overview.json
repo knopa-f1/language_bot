@@ -1,0 +1,178 @@
+{
+  "title": "Word Learning",
+  "tags": ["bot", "words"],
+  "timezone": "browser",
+  "schemaVersion": 37,
+  "version": 1,
+  "refresh": "1m",
+
+  "templating": {
+    "list": [
+      {
+        "name": "env",
+        "type": "datasource",
+        "label": "Environment",
+        "query": "postgres",
+        "current": {
+          "text": "Postgres Test",
+          "value": "postgres_test"
+        }
+      }
+    ]
+  },
+
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Correct Answer Rate (Global)",
+      "description": "Global ratio of correct answers across all users.",
+      "datasource": "$env",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(correct), 0)::float / NULLIF(COALESCE(SUM(correct), 0) + COALESCE(SUM(wrong), 0), 0) * 100 AS value FROM chats_statistics"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "\"Do Not Want to Learn\" (Total)",
+      "description": "Total words users marked as 'never learn'.",
+      "datasource": "$env",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS total FROM chats_statistics WHERE status = 'never_learn'"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Learned Words per User (Top 10)",
+      "description": "Users with the most learned words.",
+      "datasource": "$env",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT s.chat_id, ci.username, COUNT(*) AS learned_words FROM chats_statistics s LEFT JOIN chats_info ci ON ci.chat_id = s.chat_id WHERE s.status IN ('learned','already_know') GROUP BY s.chat_id, ci.username ORDER BY learned_words DESC LIMIT 10"
+        }
+      ],
+      "options": {
+        "showHeader": true
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Learned Words Over Time (Daily)",
+      "description": "Daily count of words marked as learned.",
+      "datasource": "$env",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT status_date::date::timestamp AS time, COUNT(*) AS value FROM chats_statistics WHERE status IN ('learned','already_know') GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Chat Events per Day",
+      "description": "Proxy for activity; sums daily chat events.",
+      "datasource": "$env",
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date::timestamp AS time, SUM(event_count) AS events FROM chats_event_statistics GROUP BY date ORDER BY date"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Correct Answer Rate by User",
+      "description": "Per-user correct answer rate and total attempts.",
+      "datasource": "$env",
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT s.chat_id, ci.username, COALESCE(SUM(s.correct), 0)::float / NULLIF(COALESCE(SUM(s.correct), 0) + COALESCE(SUM(s.wrong), 0), 0) * 100 AS percent_correct, COALESCE(SUM(s.correct), 0) + COALESCE(SUM(s.wrong), 0) AS total_attempts FROM chats_statistics s LEFT JOIN chats_info ci ON ci.chat_id = s.chat_id GROUP BY s.chat_id, ci.username ORDER BY total_attempts DESC, percent_correct DESC NULLS LAST"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "percent_correct" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true }
+    }
+    ,
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Do Not Want to Learn — Top 10 Words",
+      "description": "Top words most often marked as 'never learn' (by count).",
+      "datasource": "$env",
+      "gridPos": { "x": 0, "y": 22, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT s.word_id AS word_id, w.word AS word, COUNT(*) AS count FROM chats_statistics s LEFT JOIN words w ON w.word_id = s.word_id WHERE s.status = 'never_learn' GROUP BY s.word_id, w.word ORDER BY count DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true }
+    }
+  ]
+}
